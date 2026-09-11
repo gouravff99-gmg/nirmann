@@ -1,0 +1,11 @@
+flask>=3.1.0
+flask-sqlalchemy>=3.1.1
+# 4.7.1 is the current published release used by the demo environment.
+flask-jwt-extended>=4.7.1
+flask-cors>=6.0.5
+flask-migrate>=4.1.0
+python-dotenv>=1.0.1
+bcrypt>=4.3.0
+pillow>=11.1.0
+pytesseract>=0.3.13
+qrcode>=8.2

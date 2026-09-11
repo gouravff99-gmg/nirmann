@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+
+# Node
+node_modules/
+
+# macOS
+.DS_Store
+
+# Environment/secrets
+.env
+.env.*
+*.key
+*.pem
+*.p12
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploaded/private files
+uploads/
+documents/
+
+# Logs
+*.log
+
+

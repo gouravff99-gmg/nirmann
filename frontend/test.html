@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head><title>NIRMAN Debug Test</title></head>
+<body>
+<div id="step1">Loading React...</div>
+<div id="step2" style="display:none">Loading ReactDOM...</div>
+<div id="step3" style="display:none">Loading Babel...</div>
+<div id="step4" style="display:none">Running JSX...</div>
+<div id="step5" style="display:none">Done!</div>
+<div id="error" style="color:red"></div>
+<div id="react-root"></div>
+
+<script>
+window.onerror = function(msg, src, line, col, err) {
+  document.getElementById('error').innerHTML += '<br>ERROR: ' + msg + ' at line ' + line;
+};
+document.getElementById('step1').style.color = 'green';
+</script>
+<script src="/static/js/react.min.js" onload="document.getElementById('step1').textContent='✅ React loaded'; document.getElementById('step2').style.display='block';" onerror="document.getElementById('error').textContent='❌ React FAILED to load'"></script>
+<script src="/static/js/react-dom.min.js" onload="document.getElementById('step2').textContent='✅ ReactDOM loaded'; document.getElementById('step3').style.display='block';" onerror="document.getElementById('error').textContent='❌ ReactDOM FAILED to load'"></script>
+<script src="/static/js/babel.min.js" onload="document.getElementById('step3').textContent='✅ Babel loaded'; document.getElementById('step4').style.display='block'; runJSX();" onerror="document.getElementById('error').textContent='❌ Babel FAILED to load'"></script>
+
+<script>
+function runJSX() {
+  try {
+    var code = `
+      const { useState } = React;
+      function TestApp() {
+        const [count, setCount] = useState(0);
+        return React.createElement('div', {style:{padding:'20px',background:'#e0f2fe',borderRadius:'8px'}},
+          React.createElement('h1', null, '✅ NIRMAN React is Working!'),
+          React.createElement('p', null, 'Count: ' + count),
+          React.createElement('button', {onClick: () => setCount(c => c+1), style:{padding:'8px 16px',background:'#2563eb',color:'white',border:'none',borderRadius:'4px',cursor:'pointer'}}, 'Click Me')
+        );
+      }
+      const root = ReactDOM.createRoot(document.getElementById('react-root'));
+      root.render(React.createElement(TestApp));
+      document.getElementById('step4').textContent = '✅ JSX rendered!';
+      document.getElementById('step5').style.display = 'block';
+    `;
+    var transformed = Babel.transform(code, {presets:['env']}).code;
+    eval(transformed);
+  } catch(e) {
+    document.getElementById('error').innerHTML += '<br>JSX Error: ' + e.message;
+  }
+}
+</script>
+</body>
+</html>

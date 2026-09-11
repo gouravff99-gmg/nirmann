@@ -1,0 +1,2429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NIRMAN — One Platform for Smarter Business Approvals</title>
+<style>
+/* ===== CSS VARIABLES ===== */
+:root {
+  --blue: #2563eb; --blue-dark: #1d4ed8; --blue-light: #eff6ff;
+  --green: #16a34a; --green-light: #f0fdf4;
+  --amber: #d97706; --amber-light: #fffbeb;
+  --red: #dc2626; --red-light: #fef2f2;
+  --purple: #7c3aed; --purple-light: #f5f3ff;
+  --slate: #64748b; --slate-light: #f8fafc;
+  --border: #e2e8f0; --text: #0f172a; --text-muted: #64748b;
+  --sidebar-w: 240px; --radius: 12px;
+}
+
+/* ===== RESET ===== */
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; }
+body { background: #f8fafc; color: var(--text); min-height: 100vh; }
+
+/* ===== LAYOUT ===== */
+#app { display: flex; min-height: 100vh; }
+#sidebar { width: var(--sidebar-w); background: white; border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; bottom: 0; left: 0; z-index: 100; overflow-y: auto; }
+#main { margin-left: var(--sidebar-w); flex: 1; padding: 32px; max-width: calc(100vw - var(--sidebar-w)); }
+.hidden { display: none !important; }
+
+/* ===== SIDEBAR ===== */
+.sidebar-logo { padding: 20px; border-bottom: 1px solid var(--border); }
+.logo-mark { width: 36px; height: 36px; background: var(--blue); border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 16px; flex-shrink: 0; }
+.logo-text { font-size: 18px; font-weight: 800; }
+.role-badge { display: inline-block; padding: 2px 8px; background: var(--blue-light); color: var(--blue); border-radius: 6px; font-size: 11px; font-weight: 600; margin-top: 6px; }
+.demo-badge { display: inline-block; padding: 2px 8px; background: #fef3c7; color: #92400e; border-radius: 6px; font-size: 11px; font-weight: 600; margin-left: 4px; }
+nav { padding: 12px; flex: 1; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; cursor: pointer; color: var(--slate); font-size: 14px; font-weight: 500; margin-bottom: 2px; border: none; background: none; width: 100%; text-align: left; transition: background 0.15s, color 0.15s; }
+.nav-item:hover { background: var(--slate-light); color: var(--text); }
+.nav-item.active { background: var(--blue-light); color: var(--blue); font-weight: 600; }
+.sidebar-footer { padding: 12px; border-top: 1px solid var(--border); }
+.sidebar-footer button { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; cursor: pointer; color: var(--slate); font-size: 14px; font-weight: 500; border: none; background: none; width: 100%; transition: background 0.15s, color 0.15s; }
+.sidebar-footer button:hover { background: #fef2f2; color: var(--red); }
+.sidebar-footer p { font-size: 11px; color: var(--slate); text-align: center; margin-top: 8px; }
+
+/* ===== CARDS ===== */
+.card { background: white; border-radius: var(--radius); border: 1px solid var(--border); padding: 24px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+/* ===== BUTTONS ===== */
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s ease; text-decoration: none; }
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(--blue); color: white; }
+.btn-primary:hover { background: var(--blue-dark); }
+.btn-success { background: var(--green); color: white; }
+.btn-success:hover { background: #15803d; }
+.btn-danger { background: var(--red); color: white; }
+.btn-danger:hover { background: #b91c1c; }
+.btn-amber { background: #d97706; color: white; }
+.btn-amber:hover { background: #b45309; }
+.btn-outline { background: white; color: var(--text); border: 1px solid var(--border); }
+.btn-outline:hover { background: var(--slate-light); }
+.btn-sm { padding: 6px 12px; font-size: 13px; border-radius: 8px; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+.btn-icon { width: 36px; height: 36px; padding: 0; justify-content: center; border-radius: 8px; }
+
+/* ===== STATUS BADGES ===== */
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.badge-blue { background: #dbeafe; color: #1e40af; }
+.badge-green { background: #dcfce7; color: #15803d; }
+.badge-amber { background: #fef3c7; color: #92400e; }
+.badge-red { background: #fee2e2; color: #b91c1c; }
+.badge-purple { background: #ede9fe; color: #6d28d9; }
+.badge-slate { background: #f1f5f9; color: #475569; }
+.badge-cyan { background: #cffafe; color: #0e7490; }
+
+/* ===== FORMS ===== */
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+input, select, textarea { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; background: white; color: var(--text); outline: none; transition: border-color 0.15s, box-shadow 0.15s; font-family: inherit; }
+input:focus, select:focus, textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+input.error, select.error { border-color: var(--red); }
+textarea { resize: vertical; min-height: 80px; }
+.field-error { color: var(--red); font-size: 12px; margin-top: 4px; display: none; }
+.field-error.visible { display: block; }
+
+/* ===== STAT CARDS ===== */
+.stat-card { background: white; border-radius: var(--radius); border: 1px solid var(--border); padding: 20px; }
+.stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 12px; }
+.stat-value { font-size: 28px; font-weight: 800; color: var(--text); }
+.stat-label { font-size: 13px; font-weight: 600; color: var(--slate); margin-top: 4px; }
+
+/* ===== BUSINESS CARD TOTALS ===== */
+.biz-stats { display: flex; align-items: center; gap: 18px; flex-shrink: 0; }
+.biz-stat { text-align: center; min-width: 52px; }
+.biz-num { font-size: 20px; font-weight: 800; line-height: 1; }
+.biz-label { font-size: 11px; font-weight: 600; color: var(--slate); margin-top: 4px; white-space: nowrap; }
+.biz-sep { width: 1px; height: 30px; background: var(--border); flex-shrink: 0; }
+.biz-divider { width: 1px; height: 34px; background: var(--border); flex-shrink: 0; }
+
+/* ===== TABLES ===== */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; padding: 12px 16px; font-size: 12px; font-weight: 700; color: var(--slate); text-transform: uppercase; letter-spacing: 0.05em; background: var(--slate-light); border-bottom: 1px solid var(--border); white-space: nowrap; }
+td { padding: 14px 16px; font-size: 14px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #fafafa; }
+
+/* ===== MODALS ===== */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(4px); animation: fadeIn 0.2s ease; }
+.modal-box { background: white; border-radius: 16px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.2); animation: slideUp 0.25s ease; }
+.modal-box-lg { max-width: 720px; }
+.modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: white; z-index: 1; }
+.modal-body { padding: 24px; }
+.modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--slate); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px; transition: background 0.15s; }
+.modal-close:hover { background: #f1f5f9; }
+
+/* ===== TOASTS ===== */
+#toasts { position: fixed; top: 16px; right: 16px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.toast { padding: 14px 18px; border-radius: 12px; font-size: 14px; font-weight: 500; max-width: 380px; box-shadow: 0 4px 20px rgba(0,0,0,0.12); border: 1px solid; animation: toastIn 0.3s ease; pointer-events: all; }
+.toast-success { background: #f0fdf4; border-color: #86efac; color: #15803d; }
+.toast-error { background: #fef2f2; border-color: #fca5a5; color: #b91c1c; }
+.toast-warning { background: #fffbeb; border-color: #fcd34d; color: #92400e; }
+.toast-info { background: #eff6ff; border-color: #93c5fd; color: #1e40af; }
+
+/* ===== PAGE TITLES ===== */
+.page-title { font-size: 24px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+.page-subtitle { font-size: 14px; color: var(--slate); margin-bottom: 24px; }
+
+/* ===== PROGRESS BAR ===== */
+.progress-track { height: 8px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(to right, #22c55e, #16a34a); border-radius: 99px; transition: width 0.6s ease; }
+
+/* ===== WIZARD STEPS ===== */
+.step-flow { display: flex; align-items: flex-start; overflow-x: auto; padding-bottom: 8px; }
+.step-col { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+.step-circle { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; border: 2px solid #e2e8f0; background: white; color: #94a3b8; transition: all 0.2s; }
+.step-circle.done { background: var(--green); border-color: var(--green); color: white; }
+.step-circle.active { background: var(--blue); border-color: var(--blue); color: white; }
+.step-circle.rejected { background: var(--red); border-color: var(--red); color: white; }
+.step-line.rejected { background: var(--red); }
+.step-label { font-size: 11px; color: var(--slate); text-align: center; margin-top: 6px; white-space: nowrap; padding: 0 4px; }
+.step-label.active { color: var(--blue); font-weight: 600; }
+.step-label.done { color: var(--green); }
+.step-line { width: 40px; height: 2px; background: #e2e8f0; flex-shrink: 0; margin-top: 17px; transition: background 0.3s; }
+.step-line.done { background: var(--green); }
+
+/* ===== CHECKLIST ITEMS ===== */
+.checklist-item { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 12px; transition: border-color 0.2s, background 0.2s; }
+.checklist-item.approved { border-color: #86efac; background: #f0fdf4; }
+.checklist-item.needs-action { border-color: #fcd34d; background: #fffbeb; }
+.checklist-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; background: #f1f5f9; color: var(--slate); }
+.checklist-num.approved { background: #dcfce7; color: var(--green); }
+
+/* ===== NOTIFICATIONS ===== */
+.notif-item { padding: 16px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: background 0.15s; }
+.notif-item.unread { background: #eff6ff; }
+.notif-item:hover { background: var(--slate-light); }
+.notif-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--blue); flex-shrink: 0; margin-top: 6px; }
+
+/* ===== UPLOAD AREA ===== */
+.upload-area { border: 2px dashed var(--border); border-radius: 12px; padding: 32px; text-align: center; cursor: pointer; transition: all 0.2s; }
+.upload-area:hover { border-color: var(--blue); background: var(--blue-light); }
+.upload-area.has-file { border-color: var(--green); background: var(--green-light); }
+
+/* ===== DEMO BAR ===== */
+#demo-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fef3c7; border-top: 1px solid #fde68a; padding: 8px 16px; text-align: center; font-size: 12px; color: #92400e; z-index: 999; }
+
+/* ===== CHAT WIDGET ===== */
+#chat-widget { position: fixed; bottom: 80px; right: 16px; z-index: 500; }
+#chat-toggle { width: 52px; height: 52px; border-radius: 50%; background: var(--blue); color: white; border: none; cursor: pointer; font-size: 22px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(37,99,235,0.35); transition: transform 0.2s, box-shadow 0.2s; }
+#chat-toggle:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(37,99,235,0.4); }
+#chat-panel { position: absolute; bottom: 64px; right: 0; width: 320px; background: white; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 8px 32px rgba(0,0,0,0.12); overflow: hidden; animation: slideUp 0.2s ease; }
+.chat-header { background: var(--blue); color: white; padding: 14px 16px; }
+.chat-messages { height: 240px; overflow-y: auto; padding: 12px; background: #f8fafc; }
+.chat-msg { max-width: 85%; margin-bottom: 10px; }
+.chat-msg.user { margin-left: auto; }
+.chat-bubble { padding: 8px 12px; border-radius: 12px; font-size: 13px; line-height: 1.5; }
+.chat-msg.bot .chat-bubble { background: white; border: 1px solid var(--border); }
+.chat-msg.user .chat-bubble { background: var(--blue); color: white; }
+.chat-input-row { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--border); }
+.chat-input-row input { flex: 1; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; }
+.chat-input-row input:focus { border-color: var(--blue); }
+.chat-input-row button { padding: 8px 12px; background: var(--blue); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; }
+
+/* ===== CERTIFICATE ===== */
+.cert-preview { border: 3px solid #1e3a5f; border-radius: 12px; padding: 0; overflow: hidden; position: relative; background: white; }
+.cert-header-band { background: linear-gradient(135deg, #0f2460, #1e40af); color: white; padding: 24px 32px; text-align: center; }
+.cert-body { padding: 32px; position: relative; }
+.cert-watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-35deg); font-size: 32px; font-weight: 900; color: rgba(220,38,38,0.12); white-space: nowrap; pointer-events: none; letter-spacing: 2px; text-transform: uppercase; }
+.cert-seal { width: 80px; height: 80px; border: 4px solid #1e40af; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 24px; background: #eff6ff; }
+.cert-field { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+.cert-field:last-child { border-bottom: none; }
+.cert-field-label { color: var(--slate); font-weight: 500; }
+.cert-field-value { font-weight: 700; text-align: right; max-width: 60%; }
+
+/* ===== LANDING PAGE ===== */
+#landing { background: white; min-height: 100vh; }
+
+/* ===== AUTH MODAL (Login / Register / OTP / Forgot) ===== */
+.auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 18px; padding: 4px; background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; }
+.auth-tab { padding: 9px 12px; border: none; background: transparent; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--slate); cursor: pointer; }
+.auth-tab.active { background: #fff; color: var(--blue); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.auth-sub { font-size: 13px; color: var(--slate); margin-bottom: 14px; }
+.demo-otp-box { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; padding: 10px 14px; border-radius: 10px; font-size: 12px; line-height: 1.5; margin-bottom: 14px; }
+.demo-otp-box strong { font-size: 18px; letter-spacing: 3px; font-family: monospace; }
+.otp-actions { display: flex; gap: 10px; margin-top: 4px; }
+.otp-actions .btn { flex: 1; justify-content: center; }
+.auth-alt { text-align: center; font-size: 13px; margin-top: 14px; }
+.auth-alt a { color: var(--blue); text-decoration: underline; cursor: pointer; }
+.fp-link { text-align: center; margin-top: 10px; }
+.fp-link a { color: var(--slate); font-size: 13px; text-decoration: underline; cursor: pointer; }
+.landing-header { padding: 16px 40px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: white; z-index: 50; }
+.hero-title { font-size: 60px; font-weight: 900; color: var(--text); line-height: 1; letter-spacing: -2px; }
+.hero-sub { font-size: 22px; font-weight: 600; color: var(--slate); margin: 16px 0; }
+.hero-desc { font-size: 16px; color: var(--slate); max-width: 560px; margin: 0 auto 40px; line-height: 1.75; }
+.demo-btn { border: 2px solid var(--border); border-radius: 14px; padding: 20px; cursor: pointer; background: white; text-align: left; transition: all 0.2s; width: 100%; }
+.demo-btn:hover { border-color: var(--blue); background: var(--blue-light); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(37,99,235,0.15); }
+.feature-card { background: white; border: 1px solid var(--border); border-radius: 16px; padding: 24px; transition: box-shadow 0.2s, transform 0.2s; }
+.feature-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-2px); }
+.journey-step { display: flex; flex-direction: column; align-items: center; }
+.journey-circle { width: 44px; height: 44px; border-radius: 50%; background: #dbeafe; color: #2563eb; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; border: 2px solid #bfdbfe; }
+.journey-label { font-size: 13px; font-weight: 600; margin-top: 8px; color: #334155; }
+.journey-line { width: 40px; height: 2px; background: #bfdbfe; flex-shrink: 0; margin-top: 22px; }
+
+/* ===== UTILITY ===== */
+.text-muted { color: var(--slate); font-size: 13px; }
+.text-sm { font-size: 13px; }
+.text-xs { font-size: 12px; }
+.text-right { text-align: right; }
+.font-bold { font-weight: 700; }
+.mt-1 { margin-top: 4px; }
+.mt-2 { margin-top: 8px; }
+.mt-3 { margin-top: 12px; }
+.mt-4 { margin-top: 16px; }
+.mb-2 { margin-bottom: 8px; }
+.mb-4 { margin-bottom: 16px; }
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.items-start { align-items: flex-start; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
+.gap-4 { gap: 16px; }
+.flex-wrap { flex-wrap: wrap; }
+.flex-1 { flex: 1; }
+.flex-shrink-0 { flex-shrink: 0; }
+.w-full { width: 100%; }
+.space-y > * + * { margin-top: 12px; }
+.divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+.info-box { background: var(--blue-light); border: 1px solid #bfdbfe; border-radius: 10px; padding: 14px; font-size: 13px; }
+.warning-box { background: var(--amber-light); border: 1px solid #fcd34d; border-radius: 10px; padding: 14px; font-size: 13px; color: #92400e; }
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+  #sidebar { transform: translateX(-100%); }
+  #main { margin-left: 0; padding: 16px; }
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .grid-3 { grid-template-columns: 1fr 1fr; }
+  .hero-title { font-size: 40px; }
+  .features-grid { grid-template-columns: repeat(2, 1fr) !important; }
+}
+@media (max-width: 600px) {
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  .landing-header { padding: 12px 16px; }
+  .biz-stats { gap: 14px; }
+  .biz-divider { display: none; }
+  .features-grid { grid-template-columns: 1fr !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- Demo Bar -->
+<div id="demo-bar">
+  ⚠️ <strong>SIH PROTOTYPE</strong> — This application uses demonstration data only and is NOT connected to real government systems.
+  <button onclick="this.parentElement.style.display='none'" style="margin-left:12px;background:none;border:none;cursor:pointer;color:#92400e;font-weight:700;font-size:14px">✕</button>
+</div>
+
+<!-- Toast Container -->
+<div id="toasts"></div>
+
+<!-- ==================== APP SHELL ==================== -->
+<div id="app" class="hidden">
+  <div id="sidebar">
+    <div class="sidebar-logo">
+      <div class="flex items-center gap-2">
+        <div class="logo-mark">N</div>
+        <div>
+          <div class="logo-text">NIRMAN</div>
+          <div id="user-name-display" style="font-size:12px;color:var(--slate)"></div>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <span class="role-badge" id="role-badge"></span>
+        <span class="demo-badge">DEMO</span>
+      </div>
+    </div>
+    <nav id="sidebar-nav"></nav>
+    <div class="sidebar-footer">
+      <button onclick="logout()">🚪 Sign Out</button>
+      <p>SIH Prototype — Demo Data Only</p>
+    </div>
+  </div>
+  <div id="main">
+    <div id="page-content"></div>
+  </div>
+</div>
+
+<!-- ==================== LANDING PAGE ==================== -->
+<div id="landing">
+  <header class="landing-header">
+    <div class="flex items-center gap-3">
+      <div class="logo-mark">N</div>
+      <div>
+        <div style="font-size:18px;font-weight:800">NIRMAN</div>
+        <div style="font-size:11px;color:var(--slate)">Smarter Business Approvals</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span style="font-size:12px;background:#fef3c7;color:#92400e;padding:4px 12px;border-radius:99px;font-weight:600;border:1px solid #fde68a">🇮🇳 SIH 2026 Prototype</span>
+      <button class="btn btn-primary" onclick="showLoginModal()">Sign In</button>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <div style="max-width:800px;margin:0 auto;text-align:center;padding:80px 24px 48px">
+    <div style="display:inline-block;background:#eff6ff;color:var(--blue);padding:6px 16px;border-radius:99px;font-size:14px;font-weight:600;margin-bottom:24px;border:1px solid #bfdbfe">Smart India Hackathon 2026 — Demonstration Prototype</div>
+    <h1 class="hero-title">NIRMAN</h1>
+    <div class="hero-sub">One application. One unified dashboard. AI that understands your business.</div>
+    <p class="hero-desc">NIRMAN’s simulated AI Compliance Agent identifies requirements, validates documents, reuses verified data, coordinates departments in parallel, schedules inspections and tracks every deadline.</p>
+    <div class="flex justify-center gap-3 flex-wrap">
+      <button class="btn btn-primary" style="padding:14px 28px;font-size:16px" onclick="showLoginModal()">Start Application →</button>
+      <button class="btn btn-outline" style="padding:14px 28px;font-size:16px" onclick="quickLogin('applicant@demo.com')">View Live Demo</button>
+    </div>
+  </div>
+
+  <!-- Approval Journey -->
+  <div style="background:#f8fafc;padding:48px 24px;text-align:center">
+    <h2 style="font-size:20px;font-weight:700;margin-bottom:8px">The Approval Journey</h2>
+    <p style="color:var(--slate);margin-bottom:36px;font-size:14px">From discovery to certificate — end-to-end digital</p>
+    <div class="flex justify-center items-center flex-wrap" style="gap:0;max-width:700px;margin:0 auto">
+      <div class="flex items-center">
+        <div class="journey-step"><div class="journey-circle">1</div><span class="journey-label">Discover</span></div>
+        <div class="journey-line"></div>
+      </div>
+      <div class="flex items-center">
+        <div class="journey-step"><div class="journey-circle">2</div><span class="journey-label">Apply</span></div>
+        <div class="journey-line"></div>
+      </div>
+      <div class="flex items-center">
+        <div class="journey-step"><div class="journey-circle">3</div><span class="journey-label">Track</span></div>
+        <div class="journey-line"></div>
+      </div>
+      <div class="flex items-center">
+        <div class="journey-step"><div class="journey-circle">4</div><span class="journey-label">Inspect</span></div>
+        <div class="journey-line"></div>
+      </div>
+      <div class="flex items-center">
+        <div class="journey-step"><div class="journey-circle">5</div><span class="journey-label">Approve</span></div>
+        <div class="journey-line"></div>
+      </div>
+      <div class="journey-step"><div class="journey-circle">6</div><span class="journey-label">Renew</span></div>
+    </div>
+  </div>
+
+  <!-- Key Features -->
+  <div style="padding:60px 24px">
+    <h2 style="text-align:center;font-size:20px;font-weight:700;margin-bottom:8px">Key Features</h2>
+    <p style="text-align:center;color:var(--slate);margin-bottom:40px;font-size:14px">Comprehensive end-to-end business approval management</p>
+    <div class="features-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px;max-width:1100px;margin:0 auto">
+      <div class="feature-card"><div style="font-size:32px;margin-bottom:12px">🏢</div><div style="font-size:15px;font-weight:700;margin-bottom:8px">Smart Onboarding</div><div style="font-size:13px;color:var(--slate);line-height:1.6">Multi-step wizard with dynamic approval checklist based on your business profile</div></div>
+      <div class="feature-card"><div style="font-size:32px;margin-bottom:12px">📋</div><div style="font-size:15px;font-weight:700;margin-bottom:8px">Dynamic Checklists</div><div style="font-size:13px;color:var(--slate);line-height:1.6">Rule-based engine generates different approval requirements for every business type and sector</div></div>
+      <div class="feature-card"><div style="font-size:32px;margin-bottom:12px">📄</div><div style="font-size:15px;font-weight:700;margin-bottom:8px">Document Management</div><div style="font-size:13px;color:var(--slate);line-height:1.6">Upload, validate and track all required documents with mock OCR extraction</div></div>
+      <div class="feature-card"><div style="font-size:32px;margin-bottom:12px">🔍</div><div style="font-size:15px;font-weight:700;margin-bottom:8px">Physical Inspections</div><div style="font-size:13px;color:var(--slate);line-height:1.6">Digital inspection workflow with checklists, evidence upload and report submission</div></div>
+      <div class="feature-card"><div style="font-size:32px;margin-bottom:12px">📊</div><div style="font-size:15px;font-weight:700;margin-bottom:8px">Real-time Tracking</div><div style="font-size:13px;color:var(--slate);line-height:1.6">Live application status with visual timeline and SLA monitoring</div></div>
+      <div class="feature-card"><div style="font-size:32px;margin-bottom:12px">🏅</div><div style="font-size:15px;font-weight:700;margin-bottom:8px">Digital Certificates</div><div style="font-size:13px;color:var(--slate);line-height:1.6">Prototype certificates with QR verification and renewal management</div></div>
+      <div class="feature-card"><div style="font-size:32px;margin-bottom:12px">🔔</div><div style="font-size:15px;font-weight:700;margin-bottom:8px">Notifications</div><div style="font-size:13px;color:var(--slate);line-height:1.6">Real-time updates for every stage including SLA warnings and renewal reminders</div></div>
+      <div class="feature-card"><div style="font-size:32px;margin-bottom:12px">📈</div><div style="font-size:15px;font-weight:700;margin-bottom:8px">Analytics Dashboard</div><div style="font-size:13px;color:var(--slate);line-height:1.6">Admin analytics with bottleneck detection and department performance metrics</div></div>
+    </div>
+  </div>
+
+  <!-- Demo Accounts -->
+  <div style="background:#f8fafc;padding:60px 24px;text-align:center">
+    <h2 style="font-size:20px;font-weight:700;margin-bottom:8px">Demo Accounts</h2>
+    <p style="color:var(--slate);margin-bottom:32px;font-size:14px">All demo accounts share the password: <code style="background:#e2e8f0;padding:3px 10px;border-radius:6px;font-size:13px;font-family:monospace">Demo@1234</code></p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;max-width:960px;margin:0 auto">
+      <button class="demo-btn" onclick="quickLogin('applicant@demo.com')">
+        <div style="font-size:26px;margin-bottom:10px">👤</div>
+        <div style="font-size:14px;font-weight:700">Applicant</div>
+        <div style="font-size:12px;color:var(--slate);margin-top:5px">Gourav Gadgane</div>
+        <div style="font-size:11px;color:var(--slate);font-family:monospace;margin-top:4px">applicant@demo.com</div>
+        <div style="font-size:10px;font-weight:700;color:var(--blue);margin-top:10px;letter-spacing:.02em">APPLICANT · DEMO</div>
+      </button>
+      <button class="demo-btn" onclick="openAiAgentDemo()">
+        <div style="font-size:26px;margin-bottom:10px">🤖</div>
+        <div style="font-size:14px;font-weight:700">AI Compliance Agent</div>
+        <div style="font-size:12px;color:var(--slate);margin-top:5px">Automated intelligence &amp; orchestration</div>
+        <div style="font-size:10px;font-weight:700;color:var(--blue);margin-top:10px;letter-spacing:.02em">SYSTEM ROLE · AI DEMO</div>
+      </button>
+      <button class="demo-btn" onclick="quickLogin('inspector@demo.com')">
+        <div style="font-size:26px;margin-bottom:10px">🏛️</div>
+        <div style="font-size:14px;font-weight:700">Licence Officer / Inspector</div>
+        <div style="font-size:12px;color:var(--slate);margin-top:5px">Arjun Singh</div>
+        <div style="font-size:11px;color:var(--slate);font-family:monospace;margin-top:4px">inspector@demo.com</div>
+        <div style="font-size:12px;color:var(--slate);margin-top:8px">Application Review · Inspection · Approval</div>
+        <div style="font-size:10px;font-weight:700;color:var(--blue);margin-top:6px;letter-spacing:.02em">GOVERNMENT OFFICER · DEMO</div>
+      </button>
+      <button class="demo-btn" onclick="quickLogin('admin@demo.com')">
+        <div style="font-size:26px;margin-bottom:10px">⚙️</div>
+        <div style="font-size:14px;font-weight:700">Admin</div>
+        <div style="font-size:12px;color:var(--slate);margin-top:5px">System Admin</div>
+        <div style="font-size:11px;color:var(--slate);font-family:monospace;margin-top:4px">admin@demo.com</div>
+        <div style="font-size:10px;font-weight:700;color:var(--blue);margin-top:10px;letter-spacing:.02em">SYSTEM ADMIN · DEMO</div>
+      </button>
+    </div>
+    <p style="color:var(--slate);margin:18px auto 0;max-width:640px;font-size:12px">The Licence Officer / Inspector is a single officer account which covers application review, inspection, final approval and certificate generation for every licence. Industry desks (Food, Fire, Factory, Pollution, Trade, Drugs) are filters, not separate accounts.</p>
+    <p style="color:var(--slate);margin:6px auto 0;max-width:640px;font-size:12px">Licence officer is a demo account — NOT a real government official.</p>
+    <div id="landing-login-error" style="display:none;margin:16px auto 0;max-width:400px;background:#fef2f2;color:#b91c1c;padding:10px 16px;border-radius:10px;font-size:14px"></div>
+  </div>
+
+  <footer style="background:#0f172a;color:#94a3b8;padding:40px 24px;text-align:center">
+    <div style="font-size:20px;font-weight:800;color:white;margin-bottom:8px">NIRMAN</div>
+    <p style="margin-bottom:20px">One Platform for Smarter Business Approvals — SIH 2026 Prototype</p>
+    <div style="background:rgba(234,179,8,0.15);border:1px solid rgba(234,179,8,0.3);border-radius:12px;padding:16px;max-width:600px;margin:0 auto;color:#fcd34d;font-size:12px">
+      ⚠️ This application is an SIH prototype using demonstration data. It is NOT connected to any real government system, database, or API.
+    </div>
+  </footer>
+</div>
+
+<!-- ==================== AUTH MODAL (Login / Register / OTP / Forgot) ==================== -->
+<div id="login-modal" class="modal-overlay hidden">
+  <div class="modal-box" style="max-width:440px">
+    <div class="modal-header">
+      <div>
+        <div style="font-weight:700;font-size:16px" id="auth-modal-title">Sign In to NIRMAN</div>
+        <div style="font-size:12px;color:var(--slate);margin-top:2px">SIH 2026 Prototype</div>
+      </div>
+      <button class="modal-close" onclick="hideLoginModal()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- ===== SIGN IN ===== -->
+      <div id="auth-view-login">
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="auth-tab-login" onclick="showAuthView('login')">Sign In</button>
+          <button class="auth-tab" id="auth-tab-register" onclick="showAuthView('register')">Create Account</button>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="login-email" placeholder="your@email.com" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="login-password" placeholder="Your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+        <div id="login-modal-error" style="display:none;background:#fef2f2;color:#b91c1c;padding:10px 14px;border-radius:8px;font-size:14px;margin-bottom:12px"></div>
+        <button class="btn btn-primary w-full" id="login-btn" onclick="doLogin()" style="justify-content:center">Sign In</button>
+        <div class="fp-link"><a onclick="showAuthView('forgot')">Forgot password?</a></div>
+        <hr class="divider">
+        <p style="font-size:13px;color:var(--slate);text-align:center;margin-bottom:12px">Quick demo access:</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button class="btn btn-outline btn-sm" onclick="quickLogin('applicant@demo.com')">👤 Applicant</button>
+          <button class="btn btn-outline btn-sm" onclick="openAiAgentDemo()">🤖 AI Agent</button>
+          <button class="btn btn-outline btn-sm" onclick="quickLogin('inspector@demo.com')">🏛️ Officer / Inspector</button>
+          <button class="btn btn-outline btn-sm" onclick="quickLogin('admin@demo.com')">⚙️ Admin</button>
+        </div>
+      </div>
+
+      <!-- ===== REGISTER ===== -->
+      <div id="auth-view-register" class="hidden">
+        <div class="auth-sub">Create a new applicant account. You will verify your email &amp; mobile with a one-time code before you can sign in.</div>
+        <div class="form-group"><label>Full Name</label><input type="text" id="reg-name" placeholder="e.g. Anjali Verma" autocomplete="name" maxlength="100" onkeydown="if(event.key==='Enter')doRegister()"></div>
+        <div class="form-group"><label>Email Address</label><input type="email" id="reg-email" placeholder="your@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')doRegister()"></div>
+        <div class="form-group"><label>Mobile Number</label><input type="tel" id="reg-mobile" placeholder="10-digit Indian mobile" autocomplete="tel" maxlength="15" onkeydown="if(event.key==='Enter')doRegister()"></div>
+        <div class="form-group"><label>Password</label><input type="password" id="reg-password" placeholder="At least 8 characters" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()"></div>
+        <div class="form-group"><label>Confirm Password</label><input type="password" id="reg-confirm" placeholder="Re-enter password" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()"></div>
+        <div id="register-error" style="display:none;background:#fef2f2;color:#b91c1c;padding:10px 14px;border-radius:8px;font-size:14px;margin-bottom:12px"></div>
+        <button class="btn btn-primary w-full" id="register-btn" onclick="doRegister()" style="justify-content:center">Create Account</button>
+        <p class="auth-alt">Already have an account? <a onclick="showAuthView('login')">Sign In</a></p>
+      </div>
+
+      <!-- ===== OTP VERIFICATION ===== -->
+      <div id="auth-view-otp" class="hidden">
+        <div style="text-align:center;font-size:30px;margin-bottom:8px">📱</div>
+        <div style="text-align:center;font-size:15px;font-weight:700;margin-bottom:4px">Verify your account</div>
+        <p class="auth-sub" style="text-align:center">Enter the 6-digit code sent to your email &amp; mobile <span id="otp-target-email" style="font-weight:600"></span></p>
+        <div id="otp-demo-box" class="demo-otp-box" style="display:none">
+          DEMO ONLY — no SMS/email provider is configured, so the code is shown here for the SIH demo: <div style="margin-top:4px"><strong id="otp-demo-code"></strong></div>
+        </div>
+        <div class="form-group"><label>6-digit code</label><input type="text" id="otp-code" inputmode="numeric" maxlength="6" placeholder="••••••" autocomplete="one-time-code" onkeydown="if(event.key==='Enter')doVerifyOtp()"></div>
+        <div id="otp-error" style="display:none;background:#fef2f2;color:#b91c1c;padding:10px 14px;border-radius:8px;font-size:14px;margin-bottom:12px"></div>
+        <div class="otp-actions">
+          <button class="btn btn-primary" id="verify-btn" onclick="doVerifyOtp()">Verify Account</button>
+          <button class="btn btn-outline" id="resend-btn" onclick="doResendOtp()">Resend OTP</button>
+        </div>
+        <p class="auth-alt"><a onclick="showAuthView('login')">← Back to Sign In</a></p>
+      </div>
+
+      <!-- ===== FORGOT PASSWORD ===== -->
+      <div id="auth-view-forgot" class="hidden">
+        <div style="text-align:center;font-size:30px;margin-bottom:8px">🔑</div>
+
+        <!-- step A: request code -->
+        <div id="forgot-step-email">
+          <div style="text-align:center;font-size:15px;font-weight:700;margin-bottom:4px">Reset your password</div>
+          <p class="auth-sub" style="text-align:center">Enter your registered email. We'll send you a one-time reset code.</p>
+          <div class="form-group"><label>Email Address</label><input type="email" id="forgot-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')doForgotSend()"></div>
+          <div id="forgot-error" style="display:none;background:#fef2f2;color:#b91c1c;padding:10px 14px;border-radius:8px;font-size:14px;margin-bottom:12px"></div>
+          <button class="btn btn-primary w-full" id="forgot-btn" onclick="doForgotSend()" style="justify-content:center">Send Reset Code</button>
+        </div>
+
+        <!-- step B: reset -->
+        <div id="forgot-step-reset" class="hidden">
+          <div style="text-align:center;font-size:15px;font-weight:700;margin-bottom:4px">Set a new password</div>
+          <p class="auth-sub" style="text-align:center">Enter the code we sent to <span id="forgot-target-email" style="font-weight:600"></span></p>
+          <div id="forgot-demo-box" class="demo-otp-box" style="display:none">
+            DEMO ONLY — no SMS/email provider is configured, so the code is shown here for the SIH demo: <div style="margin-top:4px"><strong id="forgot-demo-code"></strong></div>
+          </div>
+          <div class="form-group"><label>6-digit code</label><input type="text" id="reset-otp" inputmode="numeric" maxlength="6" placeholder="••••••" onkeydown="if(event.key==='Enter')doResetPassword()"></div>
+          <div class="form-group"><label>New Password</label><input type="password" id="reset-password" placeholder="At least 8 characters" onkeydown="if(event.key==='Enter')doResetPassword()"></div>
+          <div class="form-group"><label>Confirm New Password</label><input type="password" id="reset-confirm" placeholder="Re-enter password" onkeydown="if(event.key==='Enter')doResetPassword()"></div>
+          <div id="reset-error" style="display:none;background:#fef2f2;color:#b91c1c;padding:10px 14px;border-radius:8px;font-size:14px;margin-bottom:12px"></div>
+          <button class="btn btn-primary w-full" id="reset-btn" onclick="doResetPassword()" style="justify-content:center">Reset Password</button>
+        </div>
+
+        <p class="auth-alt"><a onclick="showAuthView('login')">← Back to Sign In</a></p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ==================== GENERIC MODAL ==================== -->
+<div id="generic-modal" class="modal-overlay hidden">
+  <div class="modal-box" id="generic-modal-box">
+    <div class="modal-header">
+      <strong id="modal-title">Modal</strong>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<!-- ==================== CERTIFICATE MODAL ==================== -->
+<div id="cert-modal" class="modal-overlay hidden">
+  <div class="modal-box modal-box-lg">
+    <div class="modal-header">
+      <div>
+        <div style="font-weight:700;font-size:16px">Certificate Viewer</div>
+        <div style="font-size:12px;color:var(--red);margin-top:2px;font-weight:600">⚠ DEMO — NOT A GOVERNMENT-ISSUED DOCUMENT</div>
+      </div>
+      <button class="modal-close" onclick="closeCertModal()">✕</button>
+    </div>
+    <div class="modal-body" id="cert-modal-body"></div>
+  </div>
+</div>
+
+<!-- ==================== CHAT WIDGET ==================== -->
+<div id="chat-widget" class="hidden">
+  <div id="chat-panel" class="hidden">
+    <div class="chat-header">
+      <div class="flex items-center gap-3">
+        <div style="width:32px;height:32px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800">N</div>
+        <div>
+          <div style="font-size:14px;font-weight:700">NIRMAN Assistant</div>
+          <div style="font-size:11px;opacity:0.8">Demo AI · Not legal advice</div>
+        </div>
+      </div>
+    </div>
+    <div class="chat-messages" id="chat-messages">
+      <div class="chat-msg bot"><div class="chat-bubble">👋 Hi! I'm the NIRMAN Assistant. Ask me about approvals, documents, or timelines!</div></div>
+    </div>
+    <div style="padding:8px 12px;border-top:1px solid var(--border);display:flex;gap:6px;overflow-x:auto;scrollbar-width:none">
+      <button onclick="sendQuickQ(this)" style="background:#f1f5f9;border:none;padding:5px 12px;border-radius:99px;font-size:12px;cursor:pointer;white-space:nowrap;color:var(--slate)">What approvals do I need?</button>
+      <button onclick="sendQuickQ(this)" style="background:#f1f5f9;border:none;padding:5px 12px;border-radius:99px;font-size:12px;cursor:pointer;white-space:nowrap;color:var(--slate)">Documents required?</button>
+      <button onclick="sendQuickQ(this)" style="background:#f1f5f9;border:none;padding:5px 12px;border-radius:99px;font-size:12px;cursor:pointer;white-space:nowrap;color:var(--slate)">How long does it take?</button>
+    </div>
+    <div class="chat-input-row">
+      <input type="text" id="chat-input" placeholder="Ask anything..." onkeydown="if(event.key==='Enter')sendChat()">
+      <button onclick="sendChat()">➤</button>
+    </div>
+  </div>
+  <button id="chat-toggle" onclick="toggleChat()">💬</button>
+</div>
+
+<script>
+/* ===================================================
+   NIRMAN FRONTEND — COMPLETE VANILLA JS SPA
+   Backend: http://localhost:5001
+   =================================================== */
+
+const API = 'http://localhost:5001/api';
+
+// ==================== STATE ====================
+let token = localStorage.getItem('nirman_token') || null;
+let user = null;
+try { user = JSON.parse(localStorage.getItem('nirman_user') || 'null'); } catch(e) {}
+let currentPage = '';
+let chatOpen = false;
+
+// ==================== API ====================
+async function api(method, path, body, overrideToken) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  const t = overrideToken || token;
+  if (t) opts.headers['Authorization'] = 'Bearer ' + t;
+  if (body) opts.body = JSON.stringify(body);
+  try {
+    const r = await fetch(API + path, opts);
+    let d;
+    try { d = await r.json(); }
+    catch (e) {
+      const text = await r.text().catch(() => '');
+      d = { error: r.ok ? undefined : `Server returned non-JSON (${r.status})`, msg: text.slice(0, 200) || undefined };
+    }
+    if (r.status === 401 && (d.msg || d.error) && path !== '/auth/login') {
+      if (typeof window.handleSessionExpired === 'function') window.handleSessionExpired();
+    }
+    if (!r.ok) throw new Error(d.error || d.msg || `Request failed (${r.status})`);
+    return d;
+  } catch(e) {
+    if (e.message === 'Failed to fetch') throw new Error('Cannot connect to NIRMAN server at localhost:5001. Is the server running?');
+    throw e;
+  }
+}
+
+async function apiUpload(path, formData) {
+  const r = await fetch(API + path, { method: 'POST', headers: { 'Authorization': 'Bearer ' + token }, body: formData });
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.error || 'Upload failed');
+  return d;
+}
+
+// ==================== TOAST ====================
+function toast(msg, type = 'info') {
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+  el.innerHTML = `<strong>${icons[type] || 'ℹ️'}</strong> ${msg}`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.style.opacity = '0', 4500);
+  setTimeout(() => el.remove(), 5000);
+}
+
+// ==================== STATUS BADGES ====================
+const STATUS_MAP = {
+  DRAFT: ['badge-slate', 'Draft'],
+  SUBMITTED: ['badge-blue', 'Submitted'],
+  UNDER_REVIEW: ['badge-blue', 'Under Review'],
+  CORRECTION_REQUIRED: ['badge-amber', 'Correction Required'],
+  ADDITIONAL_DOCUMENTS_REQUIRED: ['badge-amber', 'Additional Documents'],
+  DOCUMENT_VALIDATION: ['badge-blue', 'Document Validation'],
+  INSPECTION_REQUIRED: ['badge-amber', 'Inspection Required'],
+  INSPECTION_SCHEDULED: ['badge-purple', 'Inspection Scheduled'],
+  INSPECTION_COMPLETED: ['badge-cyan', 'Inspection Completed'],
+  INSPECTION_PASSED: ['badge-green', 'Inspection Passed'],
+  DECISION_PENDING: ['badge-amber', 'Decision Pending'],
+  APPROVED: ['badge-green', '✓ Approved'],
+  REJECTED: ['badge-red', '✗ Rejected'],
+  NOT_APPLIED: ['badge-slate', 'Not Applied'],
+  EXPIRED: ['badge-slate', 'Expired'],
+  PENDING: ['badge-slate', 'Pending'],
+  VERIFIED: ['badge-green', '✓ Verified'],
+  RESOLVED: ['badge-green', 'Resolved'],
+  UNDER_REVIEW_G: ['badge-blue', 'Under Review'],
+};
+function badge(status) {
+  const [cls, label] = STATUS_MAP[status] || ['badge-slate', status || 'Unknown'];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function sectorIcon(sector) {
+  const icons = { FOOD_PROCESSING:'🥦', MANUFACTURING:'⚙️', RESTAURANT:'🍽️', CONSTRUCTION:'🏗️', ELECTRONICS:'💡', REAL_ESTATE:'🏢', RETAIL:'🛒', HEALTHCARE:'🏥', EDUCATION:'📚' };
+  return icons[sector] || '🏢';
+}
+
+function fmtDate(d) { return d ? new Date(d).toLocaleDateString('en-IN') : '—'; }
+function fmtDateTime(d) { return d ? new Date(d).toLocaleString('en-IN', {dateStyle:'short',timeStyle:'short'}) : '—'; }
+function safe(text) { return String(text === undefined || text === null ? '' : text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+function readable(value) { return safe(String(value || '—').replace(/_/g, ' ')); }
+
+// Parse Indian monetary amount strings (exact rupees). Accepts plain numbers,
+// comma-separated Indian notation, and lakh/crore suffixes (e.g. "1.5 Crore").
+window.parseInvestmentAmount = function(value) {
+  if (value === null || value === undefined) return null;
+  const s = String(value).trim();
+  if (s === '') return null;
+  let cleaned = s.replace(/,/g, '').replace(/₹/g, '').trim().toUpperCase();
+  const m = cleaned.match(/^([0-9]+(?:\.[0-9]+)?)\s*(CRORE|CR|LAKH|L|K|M)?$/);
+  if (!m) return null;
+  let num = parseFloat(m[1]);
+  if (isNaN(num)) return null;
+  const unit = m[2];
+  if (unit === 'CRORE' || unit === 'CR') num *= 10000000;
+  else if (unit === 'LAKH' || unit === 'L') num *= 100000;
+  else if (unit === 'K') num *= 1000;
+  else if (unit === 'M') num *= 1000000;
+  return Math.round(num);
+};
+
+// Format an exact rupee amount using Indian digit grouping.
+window.formatIndianNumber = function(value) {
+  const num = Number(value);
+  if (isNaN(num)) return '0';
+  return num.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+};
+
+// Live-update only the MSME hint box on the Size & Scale step, without
+// re-rendering the whole wizard (which would drop focus mid-typing).
+window.updateMsmeBox = function() {
+  const box = document.getElementById('msme-box');
+  if (!box) return;
+  const fd = window.wizardFormData || {};
+  const msme = window.parseInvestmentAmount(fd.investment_amount);
+  const cls = (msme === null || msme === undefined || isNaN(msme)) ? null
+    : (msme > 10000000 ? '🏭 Large Enterprise' : msme > 2500000 ? '🏢 Medium Enterprise' : '🏪 Small/Micro Enterprise');
+  box.innerHTML = cls
+    ? `<div class="info-box mt-2"><strong>Investment: ₹${window.formatIndianNumber(msme)}</strong><span class="text-xs text-muted"> — </span><strong>MSME Classification (Indicative):</strong> ${cls} <span class="text-xs text-muted">— Demo classification only</span></div>`
+    : '';
+};
+
+function fmtSize(bytes) { if (!bytes) return '—'; const kb = bytes / 1024; return kb < 1024 ? `${Math.round(kb)} KB` : `${(kb / 1024).toFixed(1)} MB`; }
+function stateBadge(state) { const m = { APPROVED:'badge-green', APPROVAL_READY:'badge-green', VERIFIED:'badge-green', PARALLEL_PROCESSING:'badge-purple', AI_REVIEW:'badge-purple', AI_ANALYSIS:'badge-purple', AI_PROCESSING:'badge-purple', AI_CHECK_COMPLETE:'badge-purple', SUBMITTED_TO_AUTHORITY:'badge-blue', ASSIGNED_TO_OFFICER:'badge-blue', INSPECTION_SCHEDULED:'badge-purple', INSPECTION_COMPLETED:'badge-cyan', INSPECTION_PASSED:'badge-green', NEEDS_CORRECTION:'badge-amber', CORRECTION_REQUIRED:'badge-amber', INSPECTION_REQUIRED:'badge-amber', EXCEPTION:'badge-red', REJECTED:'badge-red', UNDER_REVIEW:'badge-blue', SUBMITTED:'badge-blue', DOCUMENT_VALIDATION:'badge-blue', DRAFT:'badge-slate' }; return `<span class="badge ${m[state] || 'badge-slate'}">${readable(state)}</span>`; }
+
+// ==================== AUTH ====================
+let _otpEmail = '';       // email currently being OTP-verified
+let _forgotEmail = '';    // email in the forgot-password flow
+let _resendTimer = null;  // resend cooldown interval
+let _authView = 'login';
+
+function showAuthView(view) {
+  _authView = view;
+  ['login', 'register', 'otp', 'forgot'].forEach(v => {
+    const el = document.getElementById('auth-view-' + v);
+    if (el) el.classList.toggle('hidden', v !== view);
+  });
+  ['login', 'register'].forEach(v => {
+    const t = document.getElementById('auth-tab-' + v);
+    if (t) t.classList.toggle('active', v === view);
+  });
+  const titles = { login: 'Sign In to NIRMAN', register: 'Create Account', otp: 'Verify your account', forgot: 'Forgot Password' };
+  const t = document.getElementById('auth-modal-title');
+  if (t) t.textContent = titles[view] || 'NIRMAN';
+  ['login-modal-error', 'register-error', 'otp-error', 'forgot-error', 'reset-error'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  if (view === 'login') setTimeout(() => document.getElementById('login-email').focus(), 50);
+  if (view === 'register') setTimeout(() => document.getElementById('reg-name').focus(), 50);
+  if (view === 'otp') { setTimeout(() => document.getElementById('otp-code').focus(), 50); }
+  if (view === 'forgot') {
+    document.getElementById('forgot-step-email').classList.remove('hidden');
+    document.getElementById('forgot-step-reset').classList.add('hidden');
+    setTimeout(() => document.getElementById('forgot-email').focus(), 50);
+  }
+}
+
+function showLoginModal() {
+  document.getElementById('login-modal').classList.remove('hidden');
+  showAuthView('login');
+  setTimeout(() => document.getElementById('login-email').focus(), 100);
+}
+
+function hideLoginModal() {
+  if (_resendTimer) { clearInterval(_resendTimer); _resendTimer = null; }
+  const rb = document.getElementById('resend-btn');
+  if (rb) { rb.disabled = false; rb.textContent = 'Resend OTP'; }
+  document.getElementById('login-modal').classList.add('hidden');
+}
+
+// Show the DEMO-ONLY OTP box (when no external SMS/email provider is wired).
+function renderDelivery(delivery) {
+  const demo = delivery && delivery.mode === 'demo' && delivery.demo_otp;
+  [['otp-demo-box', 'otp-demo-code'], ['forgot-demo-box', 'forgot-demo-code']].forEach(([boxId, codeId]) => {
+    const box = document.getElementById(boxId);
+    const code = document.getElementById(codeId);
+    if (!box) return;
+    if (demo) { box.style.display = 'block'; if (code) code.textContent = delivery.demo_otp; }
+    else box.style.display = 'none';
+  });
+}
+
+// Disable the Resend button with a countdown (uses server cooldown seconds).
+function startResendCooldown(seconds) {
+  const btn = document.getElementById('resend-btn');
+  if (!btn) return;
+  let left = Math.max(1, Math.ceil(seconds));
+  btn.disabled = true;
+  btn.textContent = 'Resend OTP (' + left + 's)';
+  if (_resendTimer) clearInterval(_resendTimer);
+  _resendTimer = setInterval(() => {
+    left--;
+    if (_authView !== 'otp' || left <= 0) {
+      clearInterval(_resendTimer); _resendTimer = null;
+      btn.disabled = false; btn.textContent = 'Resend OTP';
+      return;
+    }
+    btn.textContent = 'Resend OTP (' + left + 's)';
+  }, 1000);
+}
+
+async function doLogin() {
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl    = document.getElementById('login-modal-error');
+  const btn      = document.getElementById('login-btn');
+
+  errEl.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = '⏳ Signing in...';
+
+  try {
+    const r = await fetch(API + '/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    let d = {};
+    try { d = await r.json(); } catch (e) { /* keep {} */ }
+
+    if (r.ok && d.token) { handleLogin(d.token, d.user); return; }
+
+    if (r.status === 403 && d.verification_required) {
+      _otpEmail = d.email || email;
+      document.getElementById('otp-target-email').textContent = '(' + (_otpEmail) + ')';
+      document.getElementById('otp-code').value = '';
+      renderDelivery(null);
+      showAuthView('otp');
+      toast('Please verify your account before continuing.', 'warning');
+      return;
+    }
+    errEl.textContent = d.error || d.msg || `Login failed (${r.status})`;
+    errEl.style.display = 'block';
+  } catch (e) {
+    errEl.textContent = 'Cannot connect to NIRMAN server. Is the backend running on port 5001?';
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Sign In';
+  }
+}
+
+async function doRegister() {
+  const errEl = document.getElementById('register-error');
+  const btn   = document.getElementById('register-btn');
+  const name  = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim().toLowerCase();
+  const mobile= document.getElementById('reg-mobile').value.trim();
+  const pwd   = document.getElementById('reg-password').value;
+  const conf  = document.getElementById('reg-confirm').value;
+
+  errEl.style.display = 'none';
+  if (name.length < 2) { errEl.textContent = 'Please enter your full name (min 2 characters).'; errEl.style.display = 'block'; return; }
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { errEl.textContent = 'Please enter a valid email address.'; errEl.style.display = 'block'; return; }
+  let mob = mobile.replace(/[^0-9]/g, '');
+  if (mob.startsWith('91') && mob.length === 12) mob = mob.slice(2);
+  if (!/^[6-9]\d{9}$/.test(mob)) { errEl.textContent = 'Please enter a valid 10-digit Indian mobile number.'; errEl.style.display = 'block'; return; }
+  if (pwd.length < 8) { errEl.textContent = 'Password must be at least 8 characters long.'; errEl.style.display = 'block'; return; }
+  if (pwd !== conf) { errEl.textContent = 'Passwords do not match.'; errEl.style.display = 'block'; return; }
+
+  btn.disabled = true; btn.textContent = '⏳ Creating account...';
+  try {
+    const d = await api('POST', '/auth/register', { name, email, mobile: mob, password: pwd, confirm_password: conf });
+    _otpEmail = d.email || email;
+    document.getElementById('otp-target-email').textContent = '(' + _otpEmail + ')';
+    document.getElementById('otp-code').value = '';
+    renderDelivery(d.delivery);
+    showAuthView('otp');
+    toast(d.message || 'Account created — check your email/mobile for the code.', 'success');
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create Account';
+  }
+}
+
+async function doVerifyOtp() {
+  const codeEl = document.getElementById('otp-code');
+  const errEl  = document.getElementById('otp-error');
+  const btn    = document.getElementById('verify-btn');
+  const otp    = codeEl.value.trim();
+  errEl.style.display = 'none';
+  if (!/^\d{6}$/.test(otp)) { errEl.textContent = 'Please enter the 6-digit code.'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = '⏳ Verifying...';
+  try {
+    const d = await api('POST', '/auth/verify-otp', { email: _otpEmail, otp });
+    handleLogin(d.token, d.user);
+    toast(d.message || 'Account verified. Welcome to NIRMAN!', 'success');
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+    codeEl.value = '';
+    codeEl.focus();
+  } finally {
+    btn.disabled = false; btn.textContent = 'Verify Account';
+  }
+}
+
+async function doResendOtp() {
+  const btn = document.getElementById('resend-btn');
+  const errEl = document.getElementById('otp-error');
+  errEl.style.display = 'none';
+  btn.disabled = true; btn.textContent = '⏳ Sending...';
+  try {
+    const d = await api('POST', '/auth/resend-otp', { email: _otpEmail });
+    document.getElementById('otp-code').value = '';
+    renderDelivery(d.delivery);
+    toast(d.message || 'A new code has been sent.', 'success');
+    btn.disabled = false; btn.textContent = 'Resend OTP';
+  } catch (e) {
+    const m = (e.message || '').match(/(\d+) second/);
+    if (m) { errEl.textContent = e.message; errEl.style.display = 'block'; startResendCooldown(parseInt(m[1], 10)); }
+    else { errEl.textContent = e.message; errEl.style.display = 'block'; btn.disabled = false; btn.textContent = 'Resend OTP'; }
+  }
+}
+
+async function doForgotSend() {
+  const errEl = document.getElementById('forgot-error');
+  const btn = document.getElementById('forgot-btn');
+  const email = document.getElementById('forgot-email').value.trim().toLowerCase();
+  errEl.style.display = 'none';
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { errEl.textContent = 'Please enter a valid email address.'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = '⏳ Sending...';
+  try {
+    const d = await api('POST', '/auth/forgot-password', { email });
+    _forgotEmail = email;
+    document.getElementById('forgot-target-email').textContent = '(' + email + ')';
+    document.getElementById('reset-otp').value = '';
+    renderDelivery(d.delivery);
+    document.getElementById('forgot-step-email').classList.add('hidden');
+    document.getElementById('forgot-step-reset').classList.remove('hidden');
+    setTimeout(() => document.getElementById('reset-otp').focus(), 60);
+    toast(d.message || 'If an account exists, a reset code has been sent.', 'info');
+  } catch (e) {
+    errEl.textContent = e.message; errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Send Reset Code';
+  }
+}
+
+async function doResetPassword() {
+  const errEl = document.getElementById('reset-error');
+  const btn = document.getElementById('reset-btn');
+  const otp = document.getElementById('reset-otp').value.trim();
+  const pwd = document.getElementById('reset-password').value;
+  const conf = document.getElementById('reset-confirm').value;
+  errEl.style.display = 'none';
+  if (!/^\d{6}$/.test(otp)) { errEl.textContent = 'Please enter the 6-digit code.'; errEl.style.display = 'block'; return; }
+  if (pwd.length < 8) { errEl.textContent = 'Password must be at least 8 characters long.'; errEl.style.display = 'block'; return; }
+  if (pwd !== conf) { errEl.textContent = 'Passwords do not match.'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = '⏳ Resetting...';
+  try {
+    const d = await api('POST', '/auth/reset-password', { email: _forgotEmail, otp, new_password: pwd, confirm_password: conf });
+    showAuthView('login');
+    document.getElementById('login-email').value = _forgotEmail;
+    toast(d.message || 'Password reset successfully. Please sign in.', 'success');
+  } catch (e) {
+    errEl.textContent = e.message; errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Reset Password';
+  }
+}
+
+async function quickLogin(email) {
+  const errEl = document.getElementById('landing-login-error');
+  if (errEl) errEl.style.display = 'none';
+  try {
+    const d = await api('POST', '/auth/login', { email, password: 'Demo@1234' });
+    handleLogin(d.token, d.user);
+  } catch(e) {
+    const el = document.getElementById('landing-login-error') || document.getElementById('login-modal-error');
+    if (el) { el.textContent = e.message; el.style.display = 'block'; }
+    toast(e.message, 'error');
+  }
+}
+
+function handleLogin(tok, usr) {
+  token = tok; user = usr;
+  localStorage.setItem('nirman_token', tok);
+  localStorage.setItem('nirman_user', JSON.stringify(usr));
+  hideLoginModal();
+  if (typeof window.startRealtime === 'function') window.startRealtime();
+  showApp();
+}
+
+function logout() {
+  localStorage.removeItem('nirman_token');
+  localStorage.removeItem('nirman_user');
+  token = null; user = null;
+  if (typeof window.closeRealtime === 'function') window.closeRealtime();
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('landing').classList.remove('hidden');
+  document.getElementById('chat-widget').classList.add('hidden');
+}
+
+/* Called when the server rejects our token (e.g. after a DB reseed changed
+   user IDs). Clears the stale session and returns to the login screen. */
+window.handleSessionExpired = function () {
+  localStorage.removeItem('nirman_token');
+  localStorage.removeItem('nirman_user');
+  token = null; user = null;
+  if (typeof window.closeRealtime === 'function') window.closeRealtime();
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('landing').classList.remove('hidden');
+  document.getElementById('chat-widget').classList.add('hidden');
+  if (typeof window.showLoginModal === 'function') window.showLoginModal();
+};
+
+// ==================== APP SHELL ====================
+function showApp() {
+  document.getElementById('landing').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('chat-widget').classList.remove('hidden');
+
+  document.getElementById('user-name-display').textContent = user.name;
+  document.getElementById('role-badge').textContent = user.role;
+
+  const navMap = {
+    APPLICANT: [
+      { page: 'dashboard', icon: '🏠', label: 'Dashboard' },
+      { page: 'businesses', icon: '🏢', label: 'My Businesses' },
+      { page: 'applications', icon: '📋', label: 'Applications' },
+      { page: 'certificates', icon: '🏅', label: 'Certificates' },
+      { page: 'documents', icon: '🗂️', label: 'Document Repository' },
+      { page: 'notifications', icon: '🔔', label: 'Notifications' },
+      { page: 'schemes', icon: '🛡️', label: 'Schemes & Incentives' },
+      { page: 'grievances', icon: '📩', label: 'Grievances' },
+    ],
+    INSPECTOR: [
+      { page: 'inspector-dashboard', icon: '🏠', label: 'Dashboard' },
+      { page: 'documents', icon: '🗂️', label: 'Document Repository' },
+      { page: 'notifications', icon: '🔔', label: 'Notifications' },
+    ],
+    ADMIN: [
+      { page: 'admin-dashboard', icon: '📊', label: 'Dashboard' },
+      { page: 'admin-applications', icon: '📋', label: 'All Applications' },
+      { page: 'documents', icon: '🗂️', label: 'Document Repository' },
+      { page: 'admin-users', icon: '👥', label: 'Users' },
+      { page: 'audit-logs', icon: '🛡️', label: 'Audit Trail' },
+      { page: 'notifications', icon: '🔔', label: 'Notifications' },
+    ],
+  };
+
+  const items = navMap[user.role] || navMap.APPLICANT;
+  document.getElementById('sidebar-nav').innerHTML = items.map(it =>
+    `<button class="nav-item" id="nav-${it.page}" onclick="navigate('${it.page}')">${it.icon} ${it.label}</button>`
+  ).join('');
+
+  const defaults = { INSPECTOR:'inspector-dashboard', ADMIN:'admin-dashboard' };
+  navigate(defaults[user.role] || 'dashboard');
+}
+
+function navigate(page, params) {
+  window._prevPage = currentPage;
+  window._pageParams = params || {};
+  currentPage = page;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const navEl = document.getElementById('nav-' + page);
+  if (navEl) navEl.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  const content = document.getElementById('page-content');
+  content.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:200px;color:var(--slate);font-size:14px">⏳ Loading...</div>';
+  if (PAGES[page]) PAGES[page](params || {});
+  else content.innerHTML = `<div class="card" style="text-align:center;padding:60px"><div style="font-size:40px;margin-bottom:12px">🔍</div><p style="color:var(--slate)">Page not found: ${page}</p><button class="btn btn-outline mt-3" onclick="navigate('dashboard')">← Dashboard</button></div>`;
+}
+
+function showError(msg) {
+  document.getElementById('page-content').innerHTML = `
+    <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:12px;padding:32px;text-align:center">
+      <div style="font-size:32px;margin-bottom:12px">⚠️</div>
+      <div style="font-weight:700;color:var(--red);margin-bottom:8px">Something went wrong</div>
+      <div style="color:var(--slate);font-size:14px;margin-bottom:20px">${msg || 'An unexpected error occurred.'}</div>
+      <div class="flex gap-3 justify-center">
+        <button class="btn btn-outline btn-sm" onclick="retryCurrentPage()">🔄 Retry</button>
+        <button class="btn btn-outline btn-sm" onclick="location.reload()">Reload Page</button>
+      </div>
+    </div>`;
+}
+
+function retryCurrentPage() {
+  if (currentPage && typeof PAGES[currentPage] === 'function') {
+    document.getElementById('page-content').innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:200px;color:var(--slate);font-size:14px">⏳ Loading...</div>';
+    try { PAGES[currentPage](window._pageParams || {}); }
+    catch(e) { showError('Failed to load page: ' + e.message); }
+  } else { navigate('dashboard'); }
+}
+
+// ==================== MODALS ====================
+function openModal(size) {
+  const box = document.getElementById('generic-modal-box');
+  box.className = size === 'lg' ? 'modal-box modal-box-lg' : 'modal-box';
+  document.getElementById('generic-modal').classList.remove('hidden');
+}
+function closeModal() { document.getElementById('generic-modal').classList.add('hidden'); }
+function closeCertModal() { document.getElementById('cert-modal').classList.remove('hidden'); document.getElementById('cert-modal').classList.add('hidden'); }
+
+document.getElementById('login-modal').addEventListener('click', e => { if (e.target === e.currentTarget) hideLoginModal(); });
+document.getElementById('generic-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+document.getElementById('cert-modal').addEventListener('click', e => { if (e.target === e.currentTarget) document.getElementById('cert-modal').classList.add('hidden'); });
+
+// ==================== PAGES ====================
+const PAGES = {};
+
+// ---- DASHBOARD ----
+PAGES['dashboard'] = async function() {
+  try {
+    const d = await api('GET', '/businesses/');
+    const bizs = d.businesses || [];
+    const totalApprovals = bizs.reduce((s,b) => s + (b.total_approvals||0), 0);
+    const approved = bizs.reduce((s,b) => s + (b.approved||0), 0);
+    const pending = bizs.reduce((s,b) => s + (b.pending||0), 0);
+    const corrections = bizs.reduce((s,b) => s + (b.corrections||0), 0);
+
+    let bizCards = bizs.length === 0
+      ? `<div class="card" style="text-align:center;padding:60px"><div style="font-size:48px;margin-bottom:16px">🏢</div><div style="font-size:17px;font-weight:700;margin-bottom:8px">No Businesses Yet</div><p style="color:var(--slate);margin-bottom:24px">Register your first business to get started</p><button class="btn btn-primary" onclick="navigate('create-business')">+ Register Business</button></div>`
+      : `<div class="grid-3">${bizs.map(b => {
+        const pct = b.total_approvals ? Math.round((b.approved/b.total_approvals)*100) : 0;
+        return `<div class="card" style="cursor:pointer;transition:box-shadow 0.15s,transform 0.15s" onmouseenter="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.1)';this.style.transform='translateY(-2px)'" onmouseleave="this.style.boxShadow='';this.style.transform=''" onclick="navigate('business-detail',{businessId:'${b.id}'})">
+          <div class="flex justify-between items-start mb-4">
+            <div><div style="font-size:15px;font-weight:700">${b.name}</div><div class="text-muted mt-1">${(b.business_type||'').replace(/_/g,' ')} · ${b.city||''}</div></div>
+            <div style="font-size:24px">${sectorIcon(b.sector)}</div>
+          </div>
+          <div class="grid-3" style="gap:8px;margin-bottom:12px">
+            <div style="background:#f8fafc;border-radius:8px;padding:8px;text-align:center"><div style="font-size:20px;font-weight:800">${b.total_approvals||0}</div><div style="font-size:11px;color:var(--slate)">Total</div></div>
+            <div style="background:#f0fdf4;border-radius:8px;padding:8px;text-align:center"><div style="font-size:20px;font-weight:800;color:var(--green)">${b.approved||0}</div><div style="font-size:11px;color:var(--green)">Done</div></div>
+            <div style="background:#fffbeb;border-radius:8px;padding:8px;text-align:center"><div style="font-size:20px;font-weight:800;color:var(--amber)">${(b.pending||0)+(b.corrections||0)}</div><div style="font-size:11px;color:var(--amber)">Pending</div></div>
+          </div>
+          <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+          <div class="flex justify-between mt-1"><span class="text-xs text-muted">${pct}% complete</span><span style="font-size:12px;color:var(--blue);font-weight:600">View →</span></div>
+        </div>`;
+      }).join('')}</div>`;
+
+    document.getElementById('page-content').innerHTML = `
+      <div class="page-title">Dashboard</div>
+      <div class="page-subtitle">Welcome back, ${user.name}</div>
+      <div class="grid-4 mb-4">
+        <div class="stat-card"><div class="stat-icon" style="background:#dbeafe">📋</div><div class="stat-value">${totalApprovals}</div><div class="stat-label">Total Approvals</div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#dcfce7">✅</div><div class="stat-value">${approved}</div><div class="stat-label">Approved</div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#eff6ff">⏳</div><div class="stat-value">${pending}</div><div class="stat-label">In Progress</div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#fef3c7">⚠️</div><div class="stat-value">${corrections}</div><div class="stat-label">Need Action</div></div>
+      </div>
+      <div class="flex justify-between items-center mb-4">
+        <div style="font-size:17px;font-weight:700">My Businesses</div>
+        <button class="btn btn-primary btn-sm" onclick="navigate('create-business')">+ Register Business</button>
+      </div>
+      ${bizCards}
+    `;
+  } catch(e) { showError('Failed to load businesses: ' + e.message); }
+};
+
+// ---- MY BUSINESSES ----
+PAGES['businesses'] = async function() {
+  try {
+    const d = await api('GET', '/businesses/');
+    const bizs = d.businesses || [];
+    const rows = bizs.length === 0
+      ? `<div class="card" style="text-align:center;padding:60px"><div style="font-size:48px;margin-bottom:16px">🏢</div><div style="font-size:17px;font-weight:700;margin-bottom:8px">No Businesses Registered</div><button class="btn btn-primary mt-3" onclick="navigate('create-business')">Register Your First Business</button></div>`
+      : `<div class="space-y">${bizs.map(b => `
+        <div class="card flex items-center justify-between gap-3" style="cursor:pointer;flex-wrap:wrap;transition:box-shadow 0.15s" onmouseenter="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'" onmouseleave="this.style.boxShadow=''" onclick="navigate('business-detail',{businessId:'${b.id}'})">
+          <div class="flex items-center gap-4" style="min-width:0">
+            <div style="width:48px;height:48px;border-radius:12px;background:#eff6ff;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${sectorIcon(b.sector)}</div>
+            <div style="min-width:0">
+              <div style="font-size:15px;font-weight:700">${b.name}</div>
+              <div class="text-muted">${(b.business_type||'').replace(/_/g,' ')} · ${b.city||''}, ${b.state||''}</div>
+              <div class="text-xs text-muted mt-1">${b.employee_count||0} employees · ₹${((b.investment_amount||0)/100000).toFixed(1)}L investment</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 flex-shrink-0" style="margin-left:8px">
+            <div class="biz-stats">
+              <div class="biz-stat"><div class="biz-num" style="color:var(--slate)">${b.required_total||0}</div><div class="biz-label">Total</div></div>
+              <div class="biz-sep"></div>
+              <div class="biz-stat"><div class="biz-num" style="color:var(--green)">${b.required_approved||0}</div><div class="biz-label" style="color:var(--green)">Approved</div></div>
+              <div class="biz-sep"></div>
+              <div class="biz-stat"><div class="biz-num" style="color:var(--amber)">${b.required_pending||0}</div><div class="biz-label" style="color:var(--amber)">Pending</div></div>
+            </div>
+            <div class="biz-divider"></div>
+            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();confirmDeleteBusiness('${b.id}','${b.name.replace(/'/g,'')}')">🗑 Delete</button>
+            <div class="biz-divider"></div>
+            <span style="color:var(--slate)">→</span>
+          </div>
+        </div>`).join('')}</div>`;
+
+    document.getElementById('page-content').innerHTML = `
+      <div class="flex justify-between items-center mb-4">
+        <div><div class="page-title">My Businesses</div><div class="page-subtitle">${bizs.length} business(es) registered</div></div>
+        <button class="btn btn-primary" onclick="navigate('create-business')">+ Register Business</button>
+      </div>
+      ${rows}`;
+  } catch(e) { showError('Failed to load businesses: ' + e.message); }
+};
+
+window.confirmDeleteBusiness = function(bizId, bizName) {
+  document.getElementById('modal-title').textContent = 'Delete Business?';
+  document.getElementById('modal-body').innerHTML = `
+    <p class="text-sm text-muted">This permanently removes <strong>${safe(bizName)}</strong> and its draft applications, documents, inspections and audit records. Approved licenses are retained as an audit record.</p>
+    <div class="flex gap-3 mt-4">
+      <button class="btn btn-outline" style="flex:1" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger" style="flex:1" onclick="runDeleteBusiness('${bizId}')">Delete</button>
+    </div>`;
+  openModal();
+};
+
+window.runDeleteBusiness = async function(bizId) {
+  try {
+    await api('DELETE', `/businesses/${bizId}`);
+    closeModal();
+    toast('Business deleted.', 'success');
+    navigate('businesses');
+  } catch(e) { toast(e.message, 'error'); }
+};
+
+// ---- CREATE BUSINESS WIZARD ----
+PAGES['create-business'] = function() {
+  // Use window globals so onclick handlers in innerHTML can access them
+  window.wizardStep = 1;
+  window.wizardFormData = {
+    name:'', owner_name:'', business_type:'', sector:'',
+    state:'', district:'', city:'', address:'',
+    investment_amount:'', employee_count:'',
+    is_manufacturing:false, handles_food:false, involves_construction:false,
+    uses_hazardous:false, uses_heavy_machinery:false, has_physical_infra:true, env_approval_applicable:false,
+  };
+  window.wizardRender = wizardRender;
+  window.wizardNext = wizardNext;
+  window.wizardBack = wizardBack;
+  window.wizardSubmit = wizardSubmit;
+  window.wizardToggleCheck = function(key) {
+    window.wizardFormData[key] = !window.wizardFormData[key];
+    window.wizardRender();
+  };
+  wizardRender();
+};
+
+function wizardRender() {
+  const step = window.wizardStep;
+  const fd = window.wizardFormData;
+  const stepNames = ['Business Info','Location','Size & Scale','Operations','Review & Submit'];
+  const totalSteps = stepNames.length;
+
+  // Step indicator
+  let stepsHTML = '';
+  for(let i=0; i<totalSteps; i++) {
+    const done = step > i+1, active = step === i+1;
+    stepsHTML += `
+      <div class="step-col">
+        <div class="step-circle ${done?'done':active?'active':''}">${done?'✓':i+1}</div>
+        <div class="step-label ${done?'done':active?'active':''}">${stepNames[i]}</div>
+      </div>`;
+    if(i < totalSteps-1) stepsHTML += `<div class="step-line ${step>i+1?'done':''}"></div>`;
+  }
+
+  const bTypes = ['FOOD_PROCESSING_UNIT','MANUFACTURING_UNIT','RESTAURANT','RETAIL_BUSINESS','CONSTRUCTION_PROJECT','SERVICE_BUSINESS','WHOLESALE_TRADE','OTHER'];
+  const sectors = ['FOOD_PROCESSING','FOOD_SERVICE','RESTAURANT','MANUFACTURING','ELECTRONICS','CONSTRUCTION','REAL_ESTATE','RETAIL','WHOLESALE','SERVICE','HEALTHCARE','EDUCATION','OTHER'];
+  const states = ['Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Delhi','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal'];
+
+  let bodyHTML = '';
+  if(step === 1) {
+    bodyHTML = `
+      <div class="form-group">
+        <label>Business Name <span style="color:var(--red)">*</span></label>
+        <input id="f-name" value="${fd.name}" placeholder="e.g. FreshBite Foods Pvt Ltd" oninput="window.wizardFormData.name=this.value">
+        <div class="field-error" id="err-name">Please enter your business name.</div>
+      </div>
+      <div class="form-group">
+        <label>Owner / Proprietor Name <span style="color:var(--red)">*</span></label>
+        <input id="f-owner" value="${fd.owner_name}" placeholder="Full legal name" oninput="window.wizardFormData.owner_name=this.value">
+        <div class="field-error" id="err-owner">Please enter the owner's name.</div>
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Business Type <span style="color:var(--red)">*</span></label>
+          <select id="f-btype" onchange="window.wizardFormData.business_type=this.value">
+            <option value="">Select type...</option>
+            ${bTypes.map(t=>`<option value="${t}" ${fd.business_type===t?'selected':''}>${t.replace(/_/g,' ')}</option>`).join('')}
+          </select>
+          <div class="field-error" id="err-btype">Please select a business type.</div>
+        </div>
+        <div class="form-group">
+          <label>Sector / Industry <span style="color:var(--red)">*</span></label>
+          <select id="f-sector" onchange="window.wizardFormData.sector=this.value">
+            <option value="">Select sector...</option>
+            ${sectors.map(s=>`<option value="${s}" ${fd.sector===s?'selected':''}>${s.replace(/_/g,' ')}</option>`).join('')}
+          </select>
+          <div class="field-error" id="err-sector">Please select a sector.</div>
+        </div>
+      </div>`;
+  } else if(step === 2) {
+    bodyHTML = `
+      <div class="grid-2">
+        <div class="form-group">
+          <label>State <span style="color:var(--red)">*</span></label>
+          <select id="f-state" onchange="window.wizardFormData.state=this.value">
+            <option value="">Select state...</option>
+            ${states.map(s=>`<option value="${s}" ${fd.state===s?'selected':''}>${s}</option>`).join('')}
+          </select>
+          <div class="field-error" id="err-state">Please select your state.</div>
+        </div>
+        <div class="form-group">
+          <label>District</label>
+          <input value="${fd.district}" placeholder="e.g. Bengaluru Urban" oninput="window.wizardFormData.district=this.value">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>City / Town</label>
+        <input value="${fd.city}" placeholder="e.g. Bengaluru" oninput="window.wizardFormData.city=this.value">
+      </div>
+      <div class="form-group">
+        <label>Business Address</label>
+        <textarea placeholder="Complete address with PIN code" oninput="window.wizardFormData.address=this.value">${fd.address}</textarea>
+      </div>`;
+  } else if(step === 3) {
+    const msme = window.parseInvestmentAmount(fd.investment_amount);
+    const msmeClass = msme === null || msme === undefined || isNaN(msme) ? null
+      : (msme > 10000000 ? '🏭 Large Enterprise' : msme > 2500000 ? '🏢 Medium Enterprise' : '🏪 Small/Micro Enterprise');
+    bodyHTML = `
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Total Investment (₹)</label>
+          <input type="text" inputmode="numeric" value="${fd.investment_amount || ''}" placeholder="e.g. 1,50,00,000 or 1.5 Crore" oninput="window.wizardFormData.investment_amount=this.value;window.updateMsmeBox()">
+          <div class="text-xs text-muted mt-1">Used for MSME size classification — accepts lakh (L), crore (Cr), comma-separated Indian amounts and exact rupee values.</div>
+        </div>
+        <div class="form-group">
+          <label>Number of Employees</label>
+          <input type="number" value="${fd.employee_count}" placeholder="e.g. 25" oninput="window.wizardFormData.employee_count=this.value">
+          <div class="text-xs text-muted mt-1">Affects labour law requirements</div>
+        </div>
+      </div>
+      <div id="msme-box">${msmeClass ? `<div class="info-box mt-2"><strong>Investment: ₹${window.formatIndianNumber(msme)}</strong><span class="text-xs text-muted"> — </span><strong>MSME Classification (Indicative):</strong> ${msmeClass} <span class="text-xs text-muted">— Demo classification only</span></div>` : ''}</div>`;
+  } else if(step === 4) {
+    const checks = [
+      ['is_manufacturing','Will you manufacture or process products?','Factory Licence may be required'],
+      ['handles_food','Will you handle, process or serve food?','FSSAI licence and Health NOC required'],
+      ['involves_construction','Will construction or significant renovation be involved?','Building plan approval required'],
+      ['uses_hazardous','Will you use or store hazardous materials?','Hazardous material licence required'],
+      ['uses_heavy_machinery','Will you use heavy or industrial machinery?','Electrical safety certificate required'],
+      ['has_physical_infra','Does your business have physical premises?','Fire NOC and local permits required'],
+      ['env_approval_applicable','May your operations have environmental impact?','Pollution control consent required'],
+    ];
+    bodyHTML = `
+      <div class="warning-box mb-4">These answers determine which approvals are required. Select all that apply for the most accurate checklist.</div>
+      ${checks.map(([key, label, hint]) => {
+        const checked = fd[key];
+        return `<div style="display:flex;align-items:flex-start;gap:12px;padding:14px;border:1px solid ${checked?'#bfdbfe':'var(--border)'};border-radius:10px;cursor:pointer;background:${checked?'#eff6ff':'white'};margin-bottom:10px;transition:all 0.15s" onclick="window.wizardToggleCheck('${key}')">
+          <div style="width:20px;height:20px;border-radius:4px;border:2px solid ${checked?'var(--blue)':'#cbd5e1'};background:${checked?'var(--blue)':'white'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;transition:all 0.15s">
+            ${checked ? '<span style="color:white;font-size:12px;font-weight:700">✓</span>' : ''}
+          </div>
+          <div>
+            <div style="font-size:14px;font-weight:600">${label}</div>
+            <div class="text-xs text-muted mt-1">${hint}</div>
+          </div>
+        </div>`;
+      }).join('')}`;
+  } else if(step === 5) {
+    // Review step
+    const revMsme = window.parseInvestmentAmount(fd.investment_amount);
+    const msmeClass = revMsme === null ? 'Not specified'
+      : (revMsme > 10000000 ? 'Large Enterprise' : revMsme > 2500000 ? 'Medium Enterprise' : 'Small/Micro Enterprise');
+    const selectedOps = [
+      fd.is_manufacturing && 'Manufacturing',
+      fd.handles_food && 'Food Handling',
+      fd.involves_construction && 'Construction',
+      fd.uses_hazardous && 'Hazardous Materials',
+      fd.uses_heavy_machinery && 'Heavy Machinery',
+      fd.has_physical_infra && 'Physical Premises',
+      fd.env_approval_applicable && 'Environmental Impact',
+    ].filter(Boolean);
+    bodyHTML = `
+      <div class="info-box mb-4">
+        <strong>Review your information before submitting.</strong> You can go back to make changes.
+      </div>
+      <div style="display:grid;gap:12px">
+        <div class="card" style="padding:16px">
+          <div style="font-weight:700;margin-bottom:12px;color:var(--blue)">📋 Business Information</div>
+          <div class="cert-field"><span class="cert-field-label">Business Name</span><span class="cert-field-value">${fd.name||'—'}</span></div>
+          <div class="cert-field"><span class="cert-field-label">Owner Name</span><span class="cert-field-value">${fd.owner_name||'—'}</span></div>
+          <div class="cert-field"><span class="cert-field-label">Business Type</span><span class="cert-field-value">${(fd.business_type||'—').replace(/_/g,' ')}</span></div>
+          <div class="cert-field"><span class="cert-field-label">Sector</span><span class="cert-field-value">${(fd.sector||'—').replace(/_/g,' ')}</span></div>
+        </div>
+        <div class="card" style="padding:16px">
+          <div style="font-weight:700;margin-bottom:12px;color:var(--blue)">📍 Location</div>
+          <div class="cert-field"><span class="cert-field-label">State</span><span class="cert-field-value">${fd.state||'—'}</span></div>
+          <div class="cert-field"><span class="cert-field-label">City</span><span class="cert-field-value">${fd.city||'—'}</span></div>
+          <div class="cert-field"><span class="cert-field-label">District</span><span class="cert-field-value">${fd.district||'—'}</span></div>
+        </div>
+        <div class="card" style="padding:16px">
+          <div style="font-weight:700;margin-bottom:12px;color:var(--blue)">📊 Scale & Operations</div>
+          <div class="cert-field"><span class="cert-field-label">Investment</span><span class="cert-field-value">${revMsme === null ? '—' : '₹' + window.formatIndianNumber(revMsme)}</span></div>
+          <div class="cert-field"><span class="cert-field-label">Employees</span><span class="cert-field-value">${fd.employee_count||'—'}</span></div>
+          <div class="cert-field"><span class="cert-field-label">MSME Category</span><span class="cert-field-value">${msmeClass}</span></div>
+          <div class="cert-field"><span class="cert-field-label">Operations</span><span class="cert-field-value">${selectedOps.join(', ')||'None selected'}</span></div>
+        </div>
+      </div>
+      <div class="warning-box mt-4">⚠️ This will register your business and generate a customised approval checklist based on your inputs. Data is stored in the demo database.</div>`;
+  }
+
+  const backLabel = step === 1 ? 'Cancel' : '← Back';
+  const backAction = step === 1 ? "navigate('dashboard')" : 'window.wizardBack()';
+  const nextBtn = step < totalSteps
+    ? `<button class="btn btn-primary" onclick="window.wizardNext()">Next →</button>`
+    : `<button class="btn btn-success" id="wizard-submit-btn" onclick="window.wizardSubmit()">🎯 Register Business</button>`;
+
+  document.getElementById('page-content').innerHTML = `
+    <div class="flex items-center gap-3 mb-4">
+      <button class="btn btn-outline btn-sm" onclick="${backAction}">←</button>
+      <div><div class="page-title">Register Business</div><div class="page-subtitle">Step ${step} of ${totalSteps} — ${stepNames[step-1]}</div></div>
+    </div>
+    <div class="step-flow mb-4" style="max-width:680px">${stepsHTML}</div>
+    <div class="card" style="max-width:680px;margin-bottom:16px" id="wizard-card">
+      ${bodyHTML}
+    </div>
+    <div class="flex justify-between" style="max-width:680px">
+      <button class="btn btn-outline" onclick="${backAction}">${backLabel}</button>
+      ${nextBtn}
+    </div>
+  `;
+}
+
+function wizardNext() {
+  const step = window.wizardStep;
+  const fd = window.wizardFormData;
+
+  // Validation
+  if(step === 1) {
+    let valid = true;
+    const showErr = (id, inputId) => {
+      const inp = document.getElementById(inputId);
+      const err = document.getElementById(id);
+      if(inp) inp.classList.add('error');
+      if(err) err.classList.add('visible');
+      valid = false;
+    };
+    const hideErr = (id, inputId) => {
+      const inp = document.getElementById(inputId);
+      const err = document.getElementById(id);
+      if(inp) inp.classList.remove('error');
+      if(err) err.classList.remove('visible');
+    };
+
+    fd.name = (document.getElementById('f-name')?.value || '').trim();
+    fd.owner_name = (document.getElementById('f-owner')?.value || '').trim();
+    fd.business_type = document.getElementById('f-btype')?.value || fd.business_type;
+    fd.sector = document.getElementById('f-sector')?.value || fd.sector;
+
+    if(!fd.name) showErr('err-name','f-name'); else hideErr('err-name','f-name');
+    if(!fd.owner_name) showErr('err-owner','f-owner'); else hideErr('err-owner','f-owner');
+    if(!fd.business_type) showErr('err-btype','f-btype'); else hideErr('err-btype','f-btype');
+    if(!fd.sector) showErr('err-sector','f-sector'); else hideErr('err-sector','f-sector');
+
+    if(!valid) { toast('Please fill in all required fields', 'warning'); return; }
+  }
+
+  if(step === 2) {
+    fd.state = document.getElementById('f-state')?.value || fd.state;
+    if(!fd.state) {
+      const inp = document.getElementById('f-state');
+      const err = document.getElementById('err-state');
+      if(inp) inp.classList.add('error');
+      if(err) err.classList.add('visible');
+      toast('Please select your state', 'warning');
+      return;
+    }
+  }
+
+  // Capture current field values before advancing
+  if(step === 3) {
+    const numInputs = document.querySelectorAll('#wizard-card input[type="text"], #wizard-card input[type="number"]');
+    if(numInputs[0]) fd.investment_amount = numInputs[0].value;
+    if(numInputs[1]) fd.employee_count = numInputs[1].value;
+    const parsed = window.parseInvestmentAmount(fd.investment_amount);
+    if(parsed === null) {
+      toast('Please enter a valid investment amount (e.g. 5000000, 1,50,00,000, 1.5 Crore)', 'warning');
+      const inp = document.querySelector('#wizard-card input[type="text"]');
+      if(inp) inp.classList.add('error');
+      return;
+    }
+  }
+
+  window.wizardStep = step + 1;
+  window.wizardRender();
+}
+
+function wizardBack() {
+  if(window.wizardStep > 1) {
+    window.wizardStep--;
+    window.wizardRender();
+  }
+}
+
+async function wizardSubmit() {
+  const btn = document.getElementById('wizard-submit-btn');
+  if(btn) { btn.disabled = true; btn.textContent = '⏳ Registering...'; }
+  const fd = window.wizardFormData;
+  try {
+    const payload = {
+      ...fd,
+      investment_amount: window.parseInvestmentAmount(fd.investment_amount) || 0,
+      employee_count: parseInt(fd.employee_count) || 0,
+    };
+    const d = await api('POST', '/businesses/', payload);
+    const biz = d.business, cl = d.checklist || [];
+    toast(`"${biz.name}" registered successfully!`, 'success');
+
+    document.getElementById('page-content').innerHTML = `
+      <div style="text-align:center;padding:40px 0 24px">
+        <div style="width:72px;height:72px;background:#dcfce7;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 16px">✅</div>
+        <div class="page-title">Business Registered!</div>
+        <div class="page-subtitle">Your customised approval checklist has been generated</div>
+      </div>
+      <div class="card" style="max-width:680px;margin:0 auto 20px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+          <div style="width:44px;height:44px;background:#eff6ff;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px">${sectorIcon(biz.sector)}</div>
+          <div>
+            <div style="font-size:17px;font-weight:700">${biz.name}</div>
+            <div class="text-muted">${cl.length} approvals required based on your business profile</div>
+          </div>
+        </div>
+        <div style="max-height:420px;overflow-y:auto">
+          ${cl.map((item, i) => {
+            const at = item.approval_type || {};
+            return `<div class="checklist-item">
+              <div class="checklist-num">${i+1}</div>
+              <div style="flex:1">
+                <div style="font-weight:700;margin-bottom:4px">${at.name||'Approval'}</div>
+                <div class="text-xs text-muted">${at.department?.name||''} · Est. ${at.estimated_days||'?'} days${at.requires_inspection?' · <span style="color:var(--amber)">🔍 Inspection Required</span>':''}</div>
+                ${item.why_triggered?`<div class="text-xs mt-1" style="color:var(--blue)">${item.why_triggered}</div>`:''}
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div class="warning-box mt-4">⚠️ This checklist is generated from demonstration rules. Please verify actual requirements with the concerned government departments.</div>
+      </div>
+      <div class="flex gap-3 justify-center">
+        <button class="btn btn-outline" onclick="navigate('businesses')">My Businesses</button>
+        <button class="btn btn-primary" onclick="navigate('business-detail',{businessId:'${biz.id}'})">View Business Dashboard →</button>
+      </div>
+    `;
+  } catch(e) {
+    toast(e.message, 'error');
+    if(btn) { btn.disabled = false; btn.textContent = '🎯 Register Business'; }
+  }
+}
+
+// ---- BUSINESS DETAIL ----
+PAGES['business-detail'] = async function(params) {
+  const id = (params||{}).businessId || window._pageParams?.businessId;
+  try {
+    const [bd, cd] = await Promise.all([
+      api('GET', `/businesses/${id}`),
+      api('GET', `/businesses/${id}/checklist`)
+    ]);
+    const b = bd.business, cl = cd.checklist || [];
+    const approved = cl.filter(i => i.application_status === 'APPROVED').length;
+    const pct = cl.length ? Math.round((approved/cl.length)*100) : 0;
+
+    const progressCounts = [
+      ['Approved', cl.filter(i=>i.application_status==='APPROVED').length, '#f0fdf4','var(--green)'],
+      ['In Progress', cl.filter(i=>['SUBMITTED','UNDER_REVIEW','INSPECTION_REQUIRED','INSPECTION_SCHEDULED','INSPECTION_COMPLETED','DECISION_PENDING'].includes(i.application_status)).length,'#eff6ff','var(--blue)'],
+      ['Needs Action', cl.filter(i=>['DRAFT','CORRECTION_REQUIRED'].includes(i.application_status)).length,'#fffbeb','var(--amber)'],
+      ['Not Applied', cl.filter(i=>i.application_status==='NOT_APPLIED').length,'#f8fafc','var(--slate)'],
+    ];
+
+    window._currentBizId = id;
+
+    document.getElementById('page-content').innerHTML = `
+      <div class="flex items-start gap-3 mb-4">
+        <button class="btn btn-outline btn-sm" onclick="navigate('businesses')" style="margin-top:4px">←</button>
+        <div>
+          <div class="flex items-center gap-3 flex-wrap"><div class="page-title">${b.name}</div><span class="badge badge-green">Active</span></div>
+          <div class="text-muted">${(b.business_type||'').replace(/_/g,' ')} · ${b.sector||''} · ${b.city||''}, ${b.state||''}</div>
+          <div class="text-xs text-muted mt-1">Reg: ${b.registration_number||'—'} · ${b.employee_count||0} employees · ₹${((b.investment_amount||0)/100000).toFixed(1)}L investment</div>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="flex justify-between items-center mb-3">
+          <div style="font-size:16px;font-weight:700">Approval Progress</div>
+          <div class="text-muted">${approved} of ${cl.length} completed</div>
+        </div>
+        <div class="progress-track" style="height:10px;margin-bottom:16px"><div class="progress-fill" style="width:${pct}%"></div></div>
+        <div class="grid-4" style="gap:8px">
+          ${progressCounts.map(([label,count,bg,color])=>`<div style="background:${bg};border-radius:10px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:800;color:${color}">${count}</div><div style="font-size:12px;font-weight:600;color:${color}">${label}</div></div>`).join('')}
+        </div>
+      </div>
+
+      <div style="font-size:16px;font-weight:700;margin-bottom:12px">Approval Checklist</div>
+      ${cl.map((item,i) => {
+        const at = item.approval_type || {};
+        const status = item.application_status || 'NOT_APPLIED';
+        const isApproved = status === 'APPROVED';
+        const isNotApplied = status === 'NOT_APPLIED';
+        const isDraft = status === 'DRAFT';
+        const needsCorrection = status === 'CORRECTION_REQUIRED';
+        return `<div class="checklist-item ${isApproved?'approved':needsCorrection||isDraft?'needs-action':''}">
+          <div class="checklist-num ${isApproved?'approved':''}">${isApproved?'✓':i+1}</div>
+          <div style="flex:1;min-width:0">
+            <div class="flex items-center gap-2 flex-wrap mb-1">
+              <div style="font-size:14px;font-weight:700">${at.name||'Approval'}</div>
+              ${badge(status)}
+              ${at.requires_inspection&&!isApproved?'<span class="badge badge-amber">🔍 Inspection</span>':''}
+            </div>
+            <div class="text-xs text-muted">${at.department?.name||''} · Est. ${at.estimated_days||'?'} days · ${at.document_requirements?.length||0} docs</div>
+            ${item.application_number?`<div class="text-xs mt-1" style="color:var(--blue)">App: ${item.application_number}</div>`:''}
+          </div>
+          <div class="flex flex-col gap-2 flex-shrink-0" style="margin-left:12px">
+            ${isNotApplied?`<button class="btn btn-primary btn-sm" onclick="startApplication('${at.id}','${id}')">Start →</button>`:''}
+            ${(isDraft||needsCorrection)&&item.application_id?`<button class="btn btn-amber btn-sm" onclick="navigate('application-detail',{applicationId:'${item.application_id}'})">Continue →</button>`:''}
+            ${!isNotApplied&&!isDraft&&!needsCorrection&&item.application_id?`<button class="btn btn-outline btn-sm" onclick="navigate('application-detail',{applicationId:'${item.application_id}'})">View</button>`:''}
+          </div>
+        </div>`;
+      }).join('')}
+    `;
+  } catch(e) { showError('Failed to load business details: ' + e.message); }
+};
+
+window.startApplication = async function(approvalTypeId, businessId) {
+  try {
+    const d = await api('POST', '/applications/', { business_id: businessId || window._currentBizId, approval_type_id: approvalTypeId });
+    toast('Application created!', 'success');
+    navigate('application-detail', { applicationId: d.application.id });
+  } catch(e) {
+    toast(e.message.includes('already') ? 'An application already exists for this approval' : e.message, e.message.includes('already') ? 'warning' : 'error');
+  }
+};
+
+// ---- APPLICATIONS LIST ----
+PAGES['applications'] = async function() {
+  try {
+    const d = await api('GET', '/applications/');
+    const apps = d.applications || [];
+
+    const statusOrder = ['DRAFT','CORRECTION_REQUIRED','SUBMITTED','UNDER_REVIEW','INSPECTION_REQUIRED','INSPECTION_SCHEDULED','INSPECTION_COMPLETED','DECISION_PENDING','APPROVED','REJECTED'];
+    apps.sort((a,b) => statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status));
+
+    document.getElementById('page-content').innerHTML = `
+      <div class="page-title">Applications</div>
+      <div class="page-subtitle">${apps.length} applications tracked</div>
+      <div class="card" style="padding:0;overflow:hidden">
+        ${apps.length === 0
+          ? '<div style="text-align:center;padding:60px;color:var(--slate)">No applications yet. Register a business and start an application!</div>'
+          : `<div class="table-wrap"><table>
+            <thead><tr><th>App No.</th><th>Approval Type</th><th>Business</th><th>Status</th><th>Submitted</th><th>SLA</th><th></th></tr></thead>
+            <tbody>
+              ${apps.map(a => `<tr>
+                <td><strong>${a.application_number||'—'}</strong></td>
+                <td>${a.approval_type_name||'—'}</td>
+                <td>${a.business_name||'—'}</td>
+                <td>${badge(a.status)}</td>
+                <td>${fmtDate(a.submission_date)||'<span class="text-muted">Draft</span>'}</td>
+                <td>${a.sla_deadline?`<span class="${new Date(a.sla_deadline)<new Date()?'text-red':'text-muted'}">${fmtDate(a.sla_deadline)}</span>`:'—'}</td>
+                <td><button class="btn btn-outline btn-sm" onclick="navigate('application-detail',{applicationId:'${a.id}'})">View →</button></td>
+              </tr>`).join('')}
+            </tbody>
+          </table></div>`}
+      </div>`;
+  } catch(e) { showError('Failed to load applications: ' + e.message); }
+};
+
+// ---- APPLICATION DETAIL ----
+PAGES['application-detail'] = async function(params) {
+  const id = (params||{}).applicationId || window._pageParams?.applicationId;
+  try {
+    const [ad, dd] = await Promise.all([
+      api('GET', `/applications/${id}`),
+      api('GET', `/documents/application/${id}`)
+    ]);
+    const app = ad.application, reqs = dd.requirements || [], docs = dd.documents || [];
+    const canSubmit = app.status === 'DRAFT' && user.role === 'APPLICANT';
+    const canCorrect = app.status === 'CORRECTION_REQUIRED' && user.role === 'APPLICANT';
+    const canDecide = ['DECISION_PENDING','INSPECTION_COMPLETED','INSPECTION_PASSED'].includes(app.status) && (user.role === 'ADMIN' || user.role === 'INSPECTOR');
+
+    const journeySteps = ['Application','Documents','Review','Inspection','Decision'];
+    const stepIdx = app.status==='DRAFT'?0:app.status==='SUBMITTED'?1:['AI_PROCESSING','AI_CHECK_COMPLETE','NEEDS_CORRECTION','SUBMITTED_TO_AUTHORITY','ASSIGNED_TO_OFFICER','UNDER_REVIEW','CORRECTION_REQUIRED','DECISION_PENDING'].includes(app.status)?2:['INSPECTION_REQUIRED','INSPECTION_SCHEDULED','INSPECTION_COMPLETED','INSPECTION_PASSED'].includes(app.status)?3:['APPROVED','REJECTED'].includes(app.status)?4:0;
+
+    let journeyHTML = journeySteps.map((s,i) => `
+      <div class="flex items-center" style="flex-shrink:0">
+        <div class="step-col">
+          <div class="step-circle ${i<stepIdx?'done':i===stepIdx?'active':''}">${i<stepIdx?'✓':i+1}</div>
+          <div class="step-label ${i<stepIdx?'done':i===stepIdx?'active':''}">${s}</div>
+        </div>
+        ${i<4?`<div class="step-line ${i<stepIdx?'done':''}" style="margin-top:18px;margin-bottom:0"></div>`:''}
+      </div>`).join('');
+
+    window._currentAppId = id;
+
+    document.getElementById('page-content').innerHTML = `
+      <div class="flex items-start gap-3 mb-4">
+        <button class="btn btn-outline btn-sm" onclick="history.back()" style="margin-top:4px">←</button>
+        <div style="flex:1">
+          <div class="flex items-center gap-3 flex-wrap">
+            <div class="page-title" style="font-size:20px">${app.approval_type_name||'Application'}</div>
+            ${badge(app.status)}
+          </div>
+          <div class="text-muted mt-1">App No: <strong>${app.application_number||'—'}</strong> · ${app.business_name||''} · ${app.department_name||''}</div>
+        </div>
+        <div class="flex gap-2">
+          ${canSubmit?`<button class="btn btn-primary" id="submit-app-btn" onclick="submitApplication('${id}')">Submit Application</button>`:''}
+          ${canCorrect?`<button class="btn btn-amber" id="correction-btn" onclick="submitCorrection('${id}')">Submit Correction</button>`:''}
+          ${canDecide?`<button class="btn btn-success" onclick="showDecisionModal('${id}','APPROVE')">✓ Approve</button><button class="btn btn-danger" onclick="showDecisionModal('${id}','REJECT')">✕ Reject</button>`:''}
+        </div>
+      </div>
+
+      ${app.status==='CORRECTION_REQUIRED'&&app.correction_notes?`<div class="warning-box mb-4"><strong>⚠️ Correction Required:</strong> ${app.correction_notes}</div>`:''}
+      ${app.status==='REJECTED'&&app.rejection_reason?`<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:12px;padding:16px;margin-bottom:16px"><strong>✗ Rejected:</strong> ${app.rejection_reason}</div>`:''}
+      ${app.status==='APPROVED'&&app.certificate?`<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:16px;margin-bottom:16px">
+        <div class="flex justify-between items-start flex-wrap gap-2">
+          <div><strong>🏅 Certificate Issued</strong><br><span class="text-sm">${app.certificate.certificate_number}</span><br><span class="text-xs text-muted">Valid until: ${fmtDate(app.certificate.valid_until)}</span></div>
+          <button class="btn btn-success btn-sm" onclick="viewCertificate(${JSON.stringify(app.certificate).replace(/"/g,'&quot;')})">View Certificate</button>
+        </div>
+        <div class="text-xs mt-2" style="color:var(--amber)">⚠️ PROTOTYPE CERTIFICATE — Not a government-issued document</div>
+      </div>`:''}
+
+      <div class="card mb-4">
+        <div style="font-size:15px;font-weight:700;margin-bottom:16px">Application Journey</div>
+        <div class="flex" style="overflow-x:auto;padding-bottom:8px">${journeyHTML}</div>
+      </div>
+
+      <div class="grid-2" style="align-items:start">
+        <div class="card">
+          <div class="flex justify-between items-center mb-4">
+            <div style="font-weight:700">Required Documents</div>
+            ${canSubmit||canCorrect?`<button class="btn btn-primary btn-sm" onclick="showUploadModal('${id}')">📎 Upload</button>`:''}
+          </div>
+          ${reqs.length===0&&docs.length===0?'<p class="text-muted text-sm">No document requirements defined.</p>':''}
+          ${reqs.map(r=>`
+            <div style="display:flex;align-items:center;gap:10px;padding:12px;background:${r.uploaded?'#f0fdf4':'#f8fafc'};border:1px solid ${r.uploaded?'#86efac':'var(--border)'};border-radius:10px;margin-bottom:8px">
+              <div style="width:32px;height:32px;border-radius:8px;background:${r.uploaded?'#dcfce7':'#f1f5f9'};display:flex;align-items:center;justify-content:center;flex-shrink:0">${r.uploaded?'✓':'○'}</div>
+              <div style="flex:1;min-width:0">
+                <div class="text-sm font-bold">${r.requirement.name}</div>
+                <div class="text-xs text-muted">${r.requirement.description||''}</div>
+                ${r.document?`<div class="text-xs mt-1" style="color:var(--blue)">${r.document.filename}</div>`:''}
+              </div>
+              <div class="flex items-center gap-2 flex-shrink-0">
+                ${r.requirement.is_mandatory&&!r.uploaded?'<span class="text-xs" style="color:var(--red);font-weight:600">Required</span>':''}
+                ${r.document?badge(r.document.verification_status):''}
+                ${(canSubmit||canCorrect)&&!r.uploaded?`<button class="btn btn-outline btn-sm" onclick="showUploadModal('${id}','${r.requirement.id}','${r.requirement.name}')">Upload</button>`:''}
+              </div>
+            </div>`).join('')}
+          ${docs.filter(d=>!d.requirement_id).map(doc=>`
+            <div style="display:flex;align-items:center;gap:10px;padding:12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;margin-bottom:8px">
+              <div style="font-size:20px">📎</div>
+              <div><div class="text-sm font-bold">${doc.filename}</div><div class="text-xs text-muted">${doc.doc_type} · ${((doc.file_size||0)/1024).toFixed(1)} KB</div></div>
+            </div>`).join('')}
+        </div>
+
+        <div class="flex flex-col gap-4">
+          <div class="card">
+            <div style="font-weight:700;margin-bottom:12px">Application Details</div>
+            ${[
+              ['Application No.', app.application_number||'—'],
+              ['Department', app.department_name||'—'],
+              ['Submitted', fmtDate(app.submission_date)||'Not submitted'],
+              ['SLA Deadline', fmtDate(app.sla_deadline)||'—'],
+              ['AI Review', app.ai_decision ? `${app.ai_decision} (${app.ai_decision_confidence||0}%)` : 'Pending'],
+            ].map(([k,v])=>`<div class="flex justify-between" style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px"><span style="color:var(--slate)">${k}</span><span style="font-weight:600;text-align:right;max-width:60%">${v}</span></div>`).join('')}
+          </div>
+          <div class="card">
+            <div style="font-weight:700;margin-bottom:12px">Status Timeline</div>
+            ${(app.status_history||[]).slice().reverse().map((sh,i,arr)=>`
+              <div class="flex gap-3 mb-3">
+                <div class="flex flex-col items-center">
+                  <div style="width:10px;height:10px;border-radius:50%;background:${i===0?'var(--blue)':'#e2e8f0'};flex-shrink:0;margin-top:4px"></div>
+                  ${i<arr.length-1?'<div style="width:1px;flex:1;background:#e2e8f0;margin:4px 0 0"></div>':''}
+                </div>
+                <div style="padding-bottom:8px">
+                  ${badge(sh.status)}
+                  <div class="text-xs text-muted mt-1">${sh.changed_by_name||'System'} · ${fmtDateTime(sh.created_at)}</div>
+                  ${sh.notes?`<div class="text-xs text-muted" style="font-style:italic">"${sh.notes}"</div>`:''}
+                </div>
+              </div>`).join('')}
+          </div>
+        </div>
+      </div>`;
+  } catch(e) { showError('Failed to load application details: ' + e.message); }
+};
+
+window.submitApplication = async function(id) {
+  const btn = document.getElementById('submit-app-btn');
+  if(btn) { btn.disabled=true; btn.textContent='⏳ Submitting...'; }
+  try {
+    await api('POST', `/applications/${id}/submit`, { force_submit: true });
+    toast('Application submitted successfully!', 'success');
+    navigate('application-detail', { applicationId: id });
+  } catch(e) { toast(e.message,'error'); if(btn){btn.disabled=false;btn.textContent='Submit Application';} }
+};
+
+window.submitCorrection = async function(id) {
+  const btn = document.getElementById('correction-btn');
+  if(btn) { btn.disabled=true; btn.textContent='⏳ Submitting...'; }
+  try {
+    await api('POST', `/applications/${id}/correction`, { notes: 'Correction submitted by applicant' });
+    toast('Correction submitted!', 'success');
+    navigate('application-detail', { applicationId: id });
+  } catch(e) { toast(e.message,'error'); if(btn){btn.disabled=false;btn.textContent='Submit Correction';} }
+};
+
+window.showDecisionModal = function(appId, action) {
+  const isApprove = action === 'APPROVE';
+  document.getElementById('modal-title').textContent = isApprove ? '✓ Approve Application' : '✕ Reject Application';
+  document.getElementById('modal-body').innerHTML = `
+    <div style="margin-bottom:16px">
+      <div class="form-group">
+        <label>Reason <span style="color:var(--red)">*</span></label>
+        <textarea id="decision-reason" rows="4" placeholder="${isApprove ? 'Explain why this application meets all compliance requirements...' : 'Explain the reason for rejection...'}" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;resize:vertical"></textarea>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <button class="btn btn-outline" style="flex:1" onclick="closeModal()">Cancel</button>
+      <button class="btn ${isApprove ? 'btn-success' : 'btn-danger'}" style="flex:1" id="decision-submit-btn" onclick="doDecision('${appId}','${action}')">${isApprove ? '✓ Approve' : '✕ Reject'}</button>
+    </div>`;
+  openModal();
+  setTimeout(() => { const ta = document.getElementById('decision-reason'); if(ta) ta.focus(); }, 200);
+};
+
+window.doDecision = async function(appId, action) {
+  const btn = document.getElementById('decision-submit-btn');
+  const reason = document.getElementById('decision-reason')?.value?.trim();
+  if(!reason) { toast('Please provide a reason', 'warning'); return; }
+  if(btn) { btn.disabled=true; btn.textContent='⏳ Processing...'; }
+  try {
+    await api('POST', `/admin/applications/${appId}/${action.toLowerCase()}`, { reason });
+    toast(action === 'APPROVE' ? 'Application approved!' : 'Application rejected.', action === 'APPROVE' ? 'success' : 'warning');
+    closeModal();
+    navigate('application-detail', { applicationId: appId });
+  } catch(e) { toast(e.message,'error'); if(btn){btn.disabled=false;btn.textContent=action==='APPROVE'?'✓ Approve':'✕ Reject';} }
+};
+
+// ---- UPLOAD MODAL ----
+window.showUploadModal = function(appId, reqId, reqName) {
+  document.getElementById('modal-title').textContent = 'Upload ' + (reqName||'Document');
+  const docTypes = ['PAN','IDENTITY','BUSINESS_REGISTRATION','FIRE_SAFETY','LAYOUT_PLAN','PROPERTY_DOCS','FSSAI','POLLUTION_CONSENT','FACTORY_LICENCE','LABOUR_REG','OTHER'];
+  document.getElementById('modal-body').innerHTML = `
+    <div class="form-group">
+      <label>Document Type</label>
+      <select id="doc-type-sel">${docTypes.map(t=>`<option value="${t}">${t.replace(/_/g,' ')}</option>`).join('')}</select>
+    </div>
+    <div class="upload-area" id="upload-area" onclick="document.getElementById('file-inp').click()">
+      <input type="file" id="file-inp" style="display:none" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" onchange="onFileSelect(this)">
+      <div style="font-size:32px;margin-bottom:8px">📎</div>
+      <div style="font-weight:600;margin-bottom:4px">Click to select file</div>
+      <div class="text-xs text-muted">PDF, PNG, JPG, DOC — Max 16 MB</div>
+      <div id="file-name" style="margin-top:10px;font-weight:600;color:var(--blue)"></div>
+    </div>
+    <div class="warning-box mt-3">📝 Demo: Files stored on server. OCR extraction is simulated.</div>
+    <div id="ocr-result" class="mt-3"></div>
+    <div class="flex gap-3 mt-4">
+      <button class="btn btn-outline" style="flex:1" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:1" id="upload-btn" onclick="doUpload('${appId}','${reqId||''}')">📤 Upload & Extract</button>
+    </div>`;
+  openModal();
+};
+
+window.onFileSelect = function(inp) {
+  if(inp.files[0]) {
+    document.getElementById('file-name').textContent = `✅ ${inp.files[0].name} (${(inp.files[0].size/1024).toFixed(1)} KB)`;
+    document.getElementById('upload-area').classList.add('has-file');
+  }
+};
+
+window.doUpload = async function(appId, reqId) {
+  const fileInp = document.getElementById('file-inp');
+  if(!fileInp.files[0]) { toast('Please select a file first','warning'); return; }
+  const btn = document.getElementById('upload-btn');
+  btn.disabled=true; btn.textContent='⏳ Uploading...';
+  try {
+    const fd = new FormData();
+    fd.append('file', fileInp.files[0]);
+    fd.append('application_id', appId);
+    fd.append('doc_type', document.getElementById('doc-type-sel').value);
+    if(reqId) fd.append('requirement_id', reqId);
+    const d = await apiUpload('/documents/upload', fd);
+    toast('Document uploaded!','success');
+    if(d.ocr_result) {
+      const ocr = d.ocr_result;
+      document.getElementById('ocr-result').innerHTML = `
+        <div class="info-box">
+          <div style="font-weight:700;color:var(--blue);margin-bottom:6px">OCR Result ${ocr.is_mock?'<span style="font-size:11px;background:#dbeafe;padding:2px 6px;border-radius:4px">MOCK (DEMO)</span>':''}</div>
+          ${ocr.note?`<div style="margin-bottom:6px;font-size:13px">${ocr.note}</div>`:''}
+          ${Object.entries(ocr.extracted_fields||{}).map(([k,v])=>`<div style="font-size:13px"><strong style="text-transform:capitalize">${k.replace(/_/g,' ')}:</strong> ${v}</div>`).join('')}
+        </div>`;
+    }
+    setTimeout(() => { closeModal(); navigate('application-detail',{applicationId:appId}); }, 2000);
+  } catch(e) { toast(e.message,'error'); btn.disabled=false; btn.textContent='📤 Upload & Extract'; }
+};
+
+// ---- CERTIFICATES ----
+PAGES['certificates'] = async function() {
+  try {
+    const d = await api('GET', '/certificates/my-certificates');
+    const certs = d.certificates || [];
+
+    document.getElementById('page-content').innerHTML = `
+      <div class="page-title">Certificates</div>
+      <div class="page-subtitle">${certs.length} certificate(s) issued</div>
+      <div class="warning-box mb-4">⚠️ All certificates are DEMO prototypes for SIH presentation only. They are NOT government-issued documents.</div>
+      ${certs.length === 0
+        ? `<div class="card" style="text-align:center;padding:60px"><div style="font-size:48px;margin-bottom:16px">🏅</div><div style="font-size:17px;font-weight:700;margin-bottom:8px">No Certificates Yet</div><p style="color:var(--slate)">Certificates appear here when applications are approved</p></div>`
+        : `<div class="grid-2">
+          ${certs.map(cert => `
+            <div class="card" style="padding:0;overflow:hidden;border-color:${cert.renewal_urgency==='URGENT'?'#fca5a5':cert.renewal_urgency==='SOON'?'#fcd34d':'#86efac'}">
+              <div style="background:linear-gradient(135deg,#0f2460,#1e40af);color:white;padding:20px 24px">
+                <div style="font-size:10px;color:#fbbf24;font-weight:700;letter-spacing:1px;margin-bottom:6px">⚠ PROTOTYPE — NOT A GOVERNMENT-ISSUED DOCUMENT</div>
+                <div style="font-size:16px;font-weight:800;margin-bottom:4px">${cert.approval_type_name}</div>
+                <div style="color:#93c5fd;font-size:13px">${cert.business_name||''}</div>
+              </div>
+              <div style="padding:16px 20px">
+                <div class="grid-2" style="gap:10px;font-size:13px;margin-bottom:14px">
+                  <div><div style="color:var(--slate);font-size:11px;margin-bottom:2px">Certificate No.</div><div style="font-weight:700;font-size:12px;word-break:break-all">${cert.certificate_number}</div></div>
+                  <div><div style="color:var(--slate);font-size:11px;margin-bottom:2px">Department</div><div style="font-weight:600">${cert.department_name||'—'}</div></div>
+                  <div><div style="color:var(--slate);font-size:11px;margin-bottom:2px">Issue Date</div><div style="font-weight:600">${fmtDate(cert.issue_date)}</div></div>
+                  <div><div style="color:var(--slate);font-size:11px;margin-bottom:2px">Valid Until</div><div style="font-weight:700;color:${cert.renewal_urgency==='URGENT'?'var(--red)':cert.renewal_urgency==='SOON'?'var(--amber)':'var(--green)'}">${fmtDate(cert.valid_until)} ${cert.days_until_expiry!==undefined?`(${cert.days_until_expiry}d)`:''}</div></div>
+                </div>
+                <div style="background:#f8fafc;border-radius:8px;padding:10px;font-size:12px;color:var(--slate);margin-bottom:12px">
+                  Verification ID: <span style="font-family:monospace;font-weight:700">${cert.verification_id}</span>
+                </div>
+                ${cert.renewal_urgency&&cert.renewal_urgency!=='OK'&&cert.renewal_urgency!=='APPROACHING'?`<div style="background:${cert.renewal_urgency==='URGENT'?'#fef2f2':'#fffbeb'};border-radius:8px;padding:10px;font-size:13px;font-weight:600;color:${cert.renewal_urgency==='URGENT'?'var(--red)':'var(--amber)'};margin-bottom:12px">🔔 Renew soon — Expires in ${cert.days_until_expiry} days</div>`:''}
+                <button class="btn btn-primary w-full" style="justify-content:center" onclick="viewCertificate(${JSON.stringify(cert).replace(/"/g,'&quot;')})">🏅 View Certificate</button>
+              </div>
+            </div>`).join('')}
+          </div>`}
+    `;
+  } catch(e) { showError('Failed to load certificates: ' + e.message); }
+};
+
+window.viewCertificate = function(cert) {
+  if(typeof cert === 'string') cert = JSON.parse(cert.replace(/&quot;/g,'"'));
+  document.getElementById('cert-modal-body').innerHTML = `
+    <div class="cert-preview" id="cert-to-print">
+      <div class="cert-header-band">
+        <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:12px">
+          <div style="width:40px;height:40px;background:rgba(255,255,255,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900">N</div>
+          <div style="text-align:left">
+            <div style="font-size:18px;font-weight:900;letter-spacing:1px">NIRMAN</div>
+            <div style="font-size:11px;opacity:0.8">Unified Business Approval Platform</div>
+          </div>
+        </div>
+        <div style="display:inline-block;background:rgba(220,38,38,0.25);border:1px solid rgba(220,38,38,0.4);border-radius:6px;padding:4px 14px;font-size:11px;font-weight:700;letter-spacing:1px;color:#fca5a5">
+          ⚠ DEMO — NOT A GOVERNMENT-ISSUED DOCUMENT
+        </div>
+      </div>
+
+      <div class="cert-body">
+        <div class="cert-watermark">DEMO PROTOTYPE</div>
+        <div class="cert-seal">🏅</div>
+        <div style="text-align:center;margin-bottom:24px">
+          <div style="font-size:22px;font-weight:900;color:#0f2460;letter-spacing:1px">APPROVAL CERTIFICATE</div>
+          <div style="font-size:15px;color:var(--slate);margin-top:4px">${cert.approval_type_name||'Approval'}</div>
+        </div>
+
+        <div style="padding:0 8px">
+          ${[
+            ['Certificate Number', cert.certificate_number],
+            ['Business Name', cert.business_name||cert.business?.name||'—'],
+            ['Applicant', cert.applicant_name||user.name||'—'],
+            ['Department', cert.department_name||'—'],
+            ['Issue Date', fmtDate(cert.issue_date)],
+            ['Valid Until', fmtDate(cert.valid_until)],
+            ['Verification ID', cert.verification_id],
+            ['Status', '<span class="badge badge-green">ACTIVE — DEMO</span>'],
+          ].map(([k,v])=>`<div class="cert-field"><span class="cert-field-label">${k}</span><span class="cert-field-value">${v}</span></div>`).join('')}
+        </div>
+
+        <div style="margin-top:24px;border-top:2px dashed #e2e8f0;padding-top:20px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+            <div style="font-size:11px;color:var(--slate);max-width:300px;line-height:1.6">
+              This is a demonstration certificate generated by the NIRMAN SIH prototype.<br>
+              It has NO legal validity and is NOT issued by any government authority.<br>
+              Verification ID is for demo purposes only.
+            </div>
+            <div style="text-align:center">
+              <div style="width:60px;height:60px;border:2px solid #1e40af;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#1e40af;word-break:break-all;padding:4px;line-height:1.2">DEMO QR CODE</div>
+              <div style="font-size:9px;color:var(--slate);margin-top:4px">Non-functional</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex gap-3 mt-4">
+      <button class="btn btn-outline" style="flex:1" onclick="document.getElementById('cert-modal').classList.add('hidden')">Close</button>
+      <button class="btn btn-primary" style="flex:1" onclick="downloadCertificate()">📥 Download Certificate</button>
+    </div>
+    <div class="warning-box mt-3" style="font-size:12px">⚠️ This certificate is an SIH 2026 prototype. It is NOT a real government-issued document and has no legal validity whatsoever.</div>
+  `;
+  document.getElementById('cert-modal').classList.remove('hidden');
+};
+
+// Download the certificate as a PDF via the browser print dialog
+// (the intended SIH prototype download flow). The certificate-only
+// window is styled and auto-triggers print so the user can save as PDF.
+window.downloadCertificate = function() {
+  const el = document.getElementById('cert-to-print');
+  if (!el) { toast('Certificate preview not found.', 'error'); return; }
+  const w = window.open('', '_blank', 'width=820,height=760');
+  if (!w) { toast('Please allow pop-ups to download the certificate.', 'warning'); return; }
+  w.document.write(`<!DOCTYPE html><html><head><title>Certificate · NIRMAN (SIH 2026 Prototype)</title><style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,'Segoe UI',sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    body{background:#eef1f5;padding:24px}
+    .sheet{max-width:760px;margin:0 auto;background:#fff;box-shadow:0 6px 24px rgba(15,23,42,.15)}
+    .cert-preview{padding:8px}
+    @media print{body{background:#fff;padding:0}.sheet{box-shadow:none;max-width:100%}}
+  </style></head><body><div class="sheet">${el.outerHTML}</div></body></html>`);
+  w.document.close();
+  w.addEventListener('load', function() { setTimeout(function() { w.print(); }, 400); });
+};
+
+window.showScheduleModal = function(inspId) {
+  const min = new Date(Date.now() + 86400000).toISOString().slice(0,16);
+  document.getElementById('modal-title').textContent = 'Schedule Inspection';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="form-group"><label>Inspection Date & Time *</label><input type="datetime-local" id="sched-date" min="${min}"></div>
+    <div class="flex gap-3 mt-4">
+      <button class="btn btn-outline" style="flex:1" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:1" onclick="doSchedule('${inspId}')">Confirm</button>
+    </div>`;
+  openModal();
+};
+
+window.doSchedule = async function(inspId) {
+  const dt = document.getElementById('sched-date')?.value;
+  if(!dt) { toast('Please select a date and time','warning'); return; }
+  try {
+    await api('POST', `/inspector/${inspId}/schedule`, { scheduled_date: new Date(dt).toISOString() });
+    toast('Inspection scheduled!','success');
+    closeModal();
+    navigate('inspector-dashboard');
+  } catch(e) { toast(e.message,'error'); }
+};
+
+window.showReportModal = function(inspId, approvalName, bizName) {
+  const checks = [
+    'Fire extinguishers available and accessible',
+    'Emergency exits clearly marked and unobstructed',
+    'Emergency signage visible throughout premises',
+    'Electrical system safely installed and certified',
+    'Fire alarm system functional',
+    'Structural integrity of building satisfactory',
+    'Adequate ventilation provided',
+    'Hazardous material storage (if any) compliant',
+  ];
+  document.getElementById('modal-title').textContent = 'Submit Inspection Report';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="info-box mb-4"><strong>${approvalName||'Inspection'}</strong>${bizName?' · '+bizName:''}</div>
+    <div style="font-weight:700;margin-bottom:10px;font-size:14px">Inspection Checklist</div>
+    <div style="max-height:220px;overflow-y:auto;margin-bottom:16px">
+      ${checks.map((item,i)=>`
+        <label id="chk-lbl-${i}" style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:all 0.15s" onclick="">
+          <input type="checkbox" id="chk-${i}" style="width:18px;height:18px;cursor:pointer" onchange="document.getElementById('chk-lbl-${i}').style.background=this.checked?'#f0fdf4':'white';document.getElementById('chk-lbl-${i}').style.borderColor=this.checked?'#86efac':'var(--border)'">
+          <span style="font-size:13px">${item}</span>
+        </label>`).join('')}
+    </div>
+    <div class="form-group"><label>Overall Remarks</label><textarea id="insp-remarks" placeholder="Summarize your findings..."></textarea></div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+      <button class="btn btn-outline btn-sm" style="flex:1;justify-content:center" onclick="runAiInspectionAssist('${inspId}',${checks.length})">🤖 AI Inspection Assistant</button>
+    </div>
+    <div class="form-group">
+      <label>Final Decision (Officer/Inspector) *</label>
+      <div class="flex gap-2">
+        <button id="dec-PASS" class="btn btn-success btn-sm" style="flex:1;justify-content:center" onclick="setDecision('PASS')">✓ PASS</button>
+        <button id="dec-FAIL" class="btn btn-danger btn-sm" style="flex:1;justify-content:center" onclick="setDecision('FAIL')">✕ FAIL</button>
+      </div>
+    </div>
+    <div class="form-group"><label>Decision Reason * (recorded to the audit trail)</label><textarea id="insp-reason" placeholder="State the basis for your PASS/FAIL decision..."></textarea></div>
+    <div id="ai-assist-result"></div>
+    <div class="warning-box">⚠️ Demo: GPS verification of physical presence is not implemented.</div>
+    <div class="flex gap-3 mt-4">
+      <button class="btn btn-outline" style="flex:1" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:1" onclick="doSubmitReport('${inspId}',${checks.length})">Submit Decision</button>
+    </div>`;
+  window._currentRec = 'APPROVE';
+  window._currentDecision = 'PASS';
+  openModal();
+};
+
+window.setDecision = function(dec) {
+  window._currentDecision = dec;
+  const pass = document.getElementById('dec-PASS'), fail = document.getElementById('dec-FAIL');
+  if(pass) pass.className = dec==='PASS' ? 'btn btn-success btn-sm' : 'btn btn-outline btn-sm';
+  if(fail) fail.className = dec==='FAIL' ? 'btn btn-danger btn-sm' : 'btn btn-outline btn-sm';
+};
+
+window.doSubmitReport = async function(inspId, count) {
+  const checkList = [];
+  for(let i=0;i<count;i++) { const el = document.getElementById('chk-'+i); if(el) checkList.push({id:i+1,checked:el.checked}); }
+  const remarks = document.getElementById('insp-remarks')?.value||'';
+  const reason = document.getElementById('insp-reason')?.value||'';
+  const decision = window._currentDecision||'PASS';
+  if(!reason.trim()) { toast('Please state a reason for your final decision','warning'); return; }
+  const rec = decision==='PASS' ? 'APPROVE' : 'REJECT';
+  try {
+    await api('POST', `/inspector/${inspId}/submit-report`, { checklist_data: checkList, remarks, recommendation: rec, overall_result: decision, decision_reason: reason.trim() });
+    toast(`Final decision recorded: ${decision}. Report submitted.`,'success');
+    closeModal();
+    navigate('inspector-dashboard');
+  } catch(e) { toast(e.message,'error'); }
+};
+
+window.runAiInspectionAssist = async function(inspId, count) {
+  const checkList = [];
+  for(let i=0;i<count;i++) { const el = document.getElementById('chk-'+i); if(el) checkList.push({id:i+1,checked:el.checked}); }
+  const remarks = document.getElementById('insp-remarks')?.value||'';
+  const box = document.getElementById('ai-assist-result');
+  if(box) box.innerHTML = '<div class="text-sm text-muted" style="padding:8px 0">🤖 Simulated AI Inspection Assistant analysing checklist…</div>';
+  try {
+    const r = await api('POST', `/ai-agent/inspection/${inspId}/assist`, { checklist_data: checkList, remarks });
+    const a = r.assistance||{};
+    const icon = a.recommendation==='APPROVE'?'✓':a.recommendation==='REJECT'?'✕':'⚠';
+    if(box) box.innerHTML = `<div class="info-box" style="border-left:4px solid ${a.color};margin-top:10px"><div class="flex justify-between gap-3"><strong>${icon} AI recommends ${a.recommendation}</strong><span style="color:${a.color};font-weight:800">${a.confidence}% confidence</span></div><div class="text-sm text-muted mt-1">${a.summary}</div><div class="text-xs text-muted mt-2">${a.disclaimer}</div><div class="flex gap-2 mt-3"><button class="btn btn-sm btn-primary" onclick="applyAiRecommendation('${a.recommendation}')">Adopt: ${a.recommendation}</button><button class="btn btn-sm btn-outline" onclick="document.getElementById('ai-assist-result').innerHTML=''">Dismiss</button></div></div>`;
+  } catch(e) { if(box) box.innerHTML = `<div class="warning-box" style="margin-top:10px">AI assistant unavailable: ${e.message}</div>`; }
+};
+
+window.applyAiRecommendation = function(rec) {
+  const decision = rec==='APPROVE' ? 'PASS' : 'FAIL';
+  setDecision(decision);
+  const box = document.getElementById('ai-assist-result');
+  if(box) box.innerHTML = `<div class="success-box" style="margin-top:10px">Final decision set to: <strong>${decision}</strong> based on AI recommendation. Review before submitting the report.</div>`;
+};
+
+// ---- SHARED DOCUMENT REPOSITORY ----
+PAGES['documents'] = async function() {
+  try {
+    const d = await api('GET', '/documents/repository');
+    const docs = d.documents || [];
+    document.getElementById('page-content').innerHTML = `
+      <div class="page-title">Shared Document Repository</div>
+      <div class="page-subtitle">Every document uploaded across applications, browsable in one place. Documents are shared across stakeholders in scope for this demo.</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px">
+        ${[['Total Documents',docs.length,'🗂️','#dbeafe'],['Verified',docs.filter(x=>x.verification_status==='VERIFIED').length,'✓','#dcfce7'],['Pending',docs.filter(x=>x.verification_status!=='VERIFIED'&&x.verification_status!=='REJECTED').length,'⏳','#f1f5f9'],['Rejected',docs.filter(x=>x.verification_status==='REJECTED').length,'✕','#fee2e2']].map(([label,val,icon,bg])=>`<div class="stat-card"><div class="stat-icon" style="background:${bg}">${icon}</div><div class="stat-value">${val}</div><div class="stat-label">${label}</div></div>`).join('')}
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="table-wrap"><table><thead><tr><th>Document</th><th>Business</th><th>Requirement</th><th>AI Status</th><th>Size</th><th>Actions</th></tr></thead><tbody>
+          ${docs.map(x=>`<tr><td><strong>${safe(x.filename)}</strong><div class="text-xs text-muted">${safe(x.doc_type||'OTHER')}</div></td><td>${safe(x.business_name||'—')}</td><td>${safe(x.requirement_name||'—')}</td><td>${stateBadge(x.verification_status||'PENDING')}</td><td>${x.file_size?`${fmtSize(x.file_size)}`:'—'}</td><td><button class="btn btn-outline btn-sm" onclick="previewDocument('${x.id}')">View</button></td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center;padding:48px;color:var(--slate)">No documents in the repository yet.</td></tr>'}
+        </tbody></table></div>
+      </div>`;
+  } catch(e) { showError('Failed to load document repository: ' + e.message); }
+};
+
+// ---- ADMIN DASHBOARD ----
+PAGES['admin-dashboard'] = async function() {
+  try {
+    const [dd, an] = await Promise.all([api('GET','/admin/dashboard'), api('GET','/admin/analytics')]);
+    const stats = dd.stats||{}, dp = an.department_performance||[];
+    document.getElementById('page-content').innerHTML = `
+      <div class="page-title">Admin Dashboard</div>
+      <div class="page-subtitle">System overview and analytics</div>
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:24px">
+        ${[['Apps',stats.total_applications||0,'📋','#dbeafe'],['Businesses',stats.total_businesses||0,'🏢','#ede9fe'],['Users',stats.total_users||0,'👥','#f1f5f9'],['Inspections',stats.total_inspections||0,'🔍','#dbeafe'],['Certificates',stats.total_certificates||0,'🏅','#dcfce7'],['SLA Breach',stats.sla_breached||0,'⚠️','#fee2e2']].map(([label,val,icon,bg])=>`<div class="stat-card"><div class="stat-icon" style="background:${bg}">${icon}</div><div class="stat-value">${val}</div><div class="stat-label">${label}</div></div>`).join('')}
+      </div>
+      <div class="card mb-4" style="padding:0;overflow:hidden">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);font-weight:700">Department Performance</div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Department</th><th>Total</th><th>Approved</th><th>Rejected</th><th>Pending</th><th>Avg Days</th><th>SLA</th><th>Status</th></tr></thead>
+          <tbody>
+            ${dp.length===0?'<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--slate)">No data</td></tr>':
+              dp.map(dept=>`<tr>
+                <td><strong>${dept.department}</strong></td><td>${dept.total}</td>
+                <td style="color:var(--green);font-weight:700">${dept.approved}</td>
+                <td style="color:var(--red);font-weight:700">${dept.rejected}</td>
+                <td>${dept.pending}</td><td>${dept.avg_processing_days}d</td><td>${dept.sla}d</td>
+                <td>${dept.avg_processing_days>dept.sla?'<span class="badge badge-red">⚠ Delayed</span>':'<span class="badge badge-green">✓ On Track</span>'}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table></div>
+      </div>
+      ${(dd.sla_violations||[]).length>0?`<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:14px;padding:20px;margin-bottom:16px">
+        <div style="font-weight:700;color:var(--red);margin-bottom:12px">⚠ SLA Violations (${dd.sla_violations.length})</div>
+        ${dd.sla_violations.map(a=>`<div style="background:white;border-radius:8px;padding:10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center"><div><div class="text-sm font-bold">${a.application_number} — ${a.approval_type_name}</div><div class="text-xs text-muted">${a.business_name} · Due: ${fmtDate(a.sla_deadline)}</div></div><span class="badge badge-red">Overdue</span></div>`).join('')}
+      </div>`:''}
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);font-weight:700">Recent Applications</div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>App No.</th><th>Approval Type</th><th>Business</th><th>Status</th></tr></thead>
+          <tbody>
+            ${(dd.recent_applications||[]).map(a=>`<tr><td><strong>${a.application_number}</strong></td><td>${a.approval_type_name}</td><td>${a.business_name}</td><td>${badge(a.status)}</td></tr>`).join('')}
+          </tbody>
+        </table></div>
+      </div>`;
+  } catch(e) { showError('Failed to load admin data: ' + e.message); }
+};
+
+PAGES['admin-applications'] = async function() {
+  try {
+    const d = await api('GET', '/admin/applications');
+    const apps = d.applications || [];
+    document.getElementById('page-content').innerHTML = `
+      <div class="page-title">All Applications</div>
+      <div class="page-subtitle">${apps.length} total applications</div>
+      <div class="card" style="padding:0;overflow:hidden">
+        ${apps.length === 0 ? '<div style="text-align:center;padding:60px;color:var(--slate)">No applications found.</div>' : `
+        <div class="table-wrap"><table>
+          <thead><tr><th>Application No.</th><th>Approval Type</th><th>Business</th><th>Applicant</th><th>AI Verification</th><th>Status</th><th>Submitted</th><th></th></tr></thead>
+          <tbody>
+            ${apps.map(a=>`<tr>
+              <td><strong>${a.application_number||'—'}</strong></td><td>${a.approval_type_name||'—'}</td>
+              <td>${a.business_name||'—'}</td><td>${a.applicant_name||'—'}</td>
+              <td>${a.ai_reviewed_at ? badge('VERIFIED') : badge('PENDING')}</td>
+              <td>${badge(a.status)}</td>
+              <td>${a.submission_date ? new Date(a.submission_date).toLocaleDateString() : '—'}</td>
+              <td style="white-space:nowrap"><button class="btn btn-outline btn-sm" onclick="navigate('application-detail',{applicationId:'${a.id}'})">View →</button></td>
+            </tr>`).join('')}
+          </tbody>
+        </table></div>`}
+      </div>`;
+  } catch(e) { showError('Failed to load admin applications: ' + e.message); }
+};
+
+PAGES['admin-users'] = async function() {
+  try {
+    const d = await api('GET', '/admin/users');
+    const users = d.users || [];
+    document.getElementById('page-content').innerHTML = `
+      <div class="page-title">Users</div>
+      <div class="page-subtitle">${users.length} registered users</div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="table-wrap"><table>
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th></tr></thead>
+          <tbody>
+            ${users.map(u=>`<tr>
+              <td><strong>${u.name}</strong></td><td>${u.email}</td>
+              <td><span class="badge ${u.role==='ADMIN'?'badge-slate':u.role==='OFFICER'?'badge-purple':u.role==='AI_AGENT'?'badge-red':'badge-green'}">${u.role==='OFFICER'?'OFFICER / INSPECTOR':u.role}</span> <span class="demo-badge">DEMO</span></td>
+            </tr>`).join('')}
+          </tbody>
+        </table></div>
+      </div>`;
+  } catch(e) { showError('Failed to load users: ' + e.message); }
+};
+
+PAGES['audit-logs'] = async function() {
+  try {
+    const d = await api('GET', '/admin/audit-logs?limit=100');
+    const logs = d.audit_logs || [];
+    document.getElementById('page-content').innerHTML = `
+      <div class="page-title">Audit Trail</div>
+      <div class="page-subtitle">Complete log of all system actions</div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="table-wrap"><table>
+          <thead><tr><th>Action</th><th>Details</th><th>User</th><th>Time</th></tr></thead>
+          <tbody>
+            ${logs.length===0?'<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--slate)">No logs yet</td></tr>':
+              logs.map(l=>`<tr>
+                <td><strong>${(l.action||'').replace(/_/g,' ')}</strong></td>
+                <td class="text-muted">${l.details||'—'}</td>
+                <td>${l.user_name||'System'}</td>
+                <td>${fmtDateTime(l.created_at)}</td>
+</tr>`).join('')}
+          </tbody>
+        </table></div>
+      </div>`;
+  } catch(e) { showError('Failed to load audit logs: ' + e.message); }
+};
+
+// ---- NOTIFICATIONS ----
+PAGES['notifications'] = async function() {
+  try {
+    const d = await api('GET', '/notifications/');
+    const notifs = d.notifications||[], unread = d.unread_count||0;
+    document.getElementById('page-content').innerHTML = `
+      <div class="flex justify-between items-center mb-4">
+        <div><div class="page-title">Notifications</div><div class="page-subtitle">${unread} unread</div></div>
+        ${unread>0?`<button class="btn btn-outline" onclick="markAllRead()">Mark all read</button>`:''}
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        ${notifs.length===0?'<div style="text-align:center;padding:60px;color:var(--slate)">🔔 You\'re all caught up!</div>':
+          notifs.map(n=>`
+            <div class="notif-item ${n.is_read?'':'unread'}" onclick="markRead('${n.id}',this)">
+              <div class="flex gap-3">
+                ${n.is_read?'<div style="width:8px"></div>':'<div class="notif-dot"></div>'}
+                <div style="flex:1">
+                  <div class="flex justify-between items-start gap-2">
+                    <div style="font-size:14px;font-weight:${n.is_read?'500':'700'}">${n.title}</div>
+                    <span class="badge ${n.type==='SUCCESS'?'badge-green':n.type==='WARNING'?'badge-amber':n.type==='ERROR'?'badge-red':'badge-blue'}" style="flex-shrink:0">${n.type}</span>
+                  </div>
+                  <div class="text-sm text-muted mt-1">${n.message}</div>
+                  <div class="text-xs text-muted mt-1">${fmtDateTime(n.created_at)}</div>
+                </div>
+              </div>
+            </div>`).join('')}
+      </div>`;
+  } catch(e) { showError('Failed to load notifications: ' + e.message); }
+};
+
+window.markRead = async function(id, el) {
+  try { await api('POST', `/notifications/${id}/read`); el.classList.remove('unread'); } catch(e) {}
+};
+window.markAllRead = async function() {
+  try { await api('POST', '/notifications/mark-all-read'); toast('All marked as read','success'); navigate('notifications'); } catch(e) { toast(e.message,'error'); }
+};
+
+// ---- SCHEMES ----
+PAGES['schemes'] = async function() {
+  try {
+    const d = await api('GET', '/approvals/schemes');
+    const schemes = d.schemes || [];
+    document.getElementById('page-content').innerHTML = `
+      <div class="page-title">Schemes & Incentives</div>
+      <div class="page-subtitle">Potential government support for your business</div>
+      <div class="warning-box mb-4">⚠️ DEMO RECOMMENDATIONS ONLY — These are illustrative examples. Verify eligibility and current terms directly with the concerned ministry or department before applying.</div>
+      <div class="grid-2">
+        ${schemes.map(s=>`<div class="card">
+          <div class="flex justify-between mb-3">
+            <div><div style="font-size:15px;font-weight:700">${s.name}</div><div class="text-xs text-muted mt-1">${s.authority}</div></div>
+            <span class="badge badge-blue">${s.benefit_type}</span>
+          </div>
+          <p class="text-sm text-muted mb-3">${s.description}</p>
+          <div style="background:#f0fdf4;border-radius:8px;padding:10px;margin-bottom:12px">
+            <div style="font-size:14px;font-weight:700;color:var(--green)">${s.amount_description}</div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            ${(s.applicable_sectors||[]).map(sec=>`<span class="badge badge-slate" style="font-size:11px">${sec.replace(/_/g,' ')}</span>`).join('')}
+          </div>
+        </div>`).join('')}
+      </div>`;
+  } catch(e) { showError('Failed to load schemes: ' + e.message); }
+};
+
+// ---- GRIEVANCES ----
+PAGES['grievances'] = async function() {
+  try {
+    const d = await api('GET', '/grievances/');
+    const grievances = d.grievances || [];
+    document.getElementById('page-content').innerHTML = `
+      <div class="flex justify-between items-center mb-4">
+        <div><div class="page-title">Grievances</div><div class="page-subtitle">File and track your complaints</div></div>
+        ${user.role==='APPLICANT'?`<button class="btn btn-primary" onclick="showGrievanceModal()">+ File Grievance</button>`:''}
+      </div>
+      <div class="space-y">
+        ${grievances.length===0?`<div class="card" style="text-align:center;padding:60px"><div style="font-size:48px;margin-bottom:16px">📩</div><div style="font-size:17px;font-weight:700;margin-bottom:8px">No Grievances Filed</div><p style="color:var(--slate);margin-bottom:20px">If you face any issue with an application, file a grievance here</p>${user.role==='APPLICANT'?`<button class="btn btn-primary" onclick="showGrievanceModal()">+ File Grievance</button>`:''}</div>`:
+          grievances.map(g=>`<div class="card">
+            <div class="flex justify-between items-start gap-4">
+              <div style="flex:1">
+                <div class="flex items-center gap-3 mb-2 flex-wrap">
+                  <strong>${g.grievance_number||'—'}</strong>
+                  <span class="badge ${g.status==='RESOLVED'?'badge-green':g.status==='UNDER_REVIEW'?'badge-blue':'badge-slate'}">${g.status}</span>
+                </div>
+                <div style="font-size:14px;font-weight:600;margin-bottom:4px">${(g.reason||'').replace(/_/g,' ')}</div>
+                <p class="text-sm text-muted">${g.description}</p>
+                ${g.resolution?`<div class="info-box mt-3"><strong>✓ Resolution:</strong> ${g.resolution}</div>`:''}
+                <div class="text-xs text-muted mt-2">Filed: ${fmtDate(g.created_at)}</div>
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>`;
+  } catch(e) { showError('Failed to load grievances: ' + e.message); }
+};
+
+window.showGrievanceModal = function() {
+  const reasons = ['APPLICATION_DELAY','DOCUMENT_REJECTION','INCORRECT_DECISION','AI_DECISION_DISPUTE','TECHNICAL_ISSUE','MISSING_INFORMATION','OTHER'];
+  document.getElementById('modal-title').textContent = 'File a Grievance';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="warning-box mb-4">⚠️ DEMO FEATURE — Grievances filed here go into the demo database only and will not reach real government officials.</div>
+    <div class="form-group">
+      <label>Reason / Category *</label>
+      <select id="griev-reason">
+        <option value="">Select reason...</option>
+        ${reasons.map(r=>`<option value="${r}">${r.replace(/_/g,' ')}</option>`).join('')}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Description *</label>
+      <textarea id="griev-desc" placeholder="Describe your grievance in detail. Include relevant application numbers or dates..." style="min-height:120px"></textarea>
+    </div>
+    <div class="flex gap-3 mt-4">
+      <button class="btn btn-outline" style="flex:1" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" style="flex:1" onclick="doGrievance()">Submit Grievance</button>
+    </div>`;
+  openModal();
+};
+
+window.doGrievance = async function() {
+  const reason = document.getElementById('griev-reason')?.value;
+  const description = document.getElementById('griev-desc')?.value?.trim();
+  if(!reason) { toast('Please select a reason','warning'); return; }
+  if(!description || description.length < 10) { toast('Please provide a detailed description (min 10 characters)','warning'); return; }
+  try {
+    await api('POST', '/grievances/', { reason, description });
+    toast('Grievance filed successfully!','success');
+    closeModal();
+    navigate('grievances');
+  } catch(e) { toast(e.message,'error'); }
+};
+
+// ---- CHAT ----
+function toggleChat() {
+  chatOpen = !chatOpen;
+  document.getElementById('chat-panel').classList.toggle('hidden', !chatOpen);
+  document.getElementById('chat-toggle').textContent = chatOpen ? '✕' : '💬';
+}
+
+async function sendChat() {
+  const inp = document.getElementById('chat-input');
+  const msg = (inp.value || '').trim();
+  if(!msg) return;
+  inp.value = '';
+  appendChat(msg, 'user');
+  try {
+    const d = await api('POST', '/assistant/chat', { message: msg });
+    appendChat(d.response, 'bot');
+  } catch(e) { appendChat('Sorry, I encountered an error. Please try again.', 'bot'); }
+}
+
+function sendQuickQ(btn) { document.getElementById('chat-input').value = btn.textContent; sendChat(); }
+
+function appendChat(text, from) {
+  const msgs = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = `chat-msg ${from}`;
+  div.innerHTML = `<div class="chat-bubble">${text}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+// ==================== INIT ====================
+// If already logged in (token in localStorage), show app
+if (token && user) {
+  showApp();
+  if (typeof window.startRealtime === 'function') window.startRealtime();
+}
+</script>
+<script src="js/ai-upgrade.js?v=20260902"></script>
+</body>
+</html>
